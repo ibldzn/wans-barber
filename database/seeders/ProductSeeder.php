@@ -2,7 +2,8 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
+use App\Models\Product;
+use App\Models\ProductCategory;
 use Illuminate\Database\Seeder;
 
 class ProductSeeder extends Seeder
@@ -12,38 +13,86 @@ class ProductSeeder extends Seeder
      */
     public function run(): void
     {
-        $products = [
+        $categories = [
             'Barbershop' => [
-                'Haircut Dewasa' => 60_000,
-                'Haircut Anak' => 50_000,
-                'Hair Color' => 110_000,
-                'Jasa Hair Color' => 60_000,
-                'Shaving' => 25_000,
-                'Keramas + Vit' => 20_000,
+                'category_type' => 'service',
+                'commission_rate_regular' => 0.40,
+                'commission_rate_callout' => 0.40,
             ],
             'Reflexology' => [
-                'Reflexy 1 Jam' => 100_000,
-                'Reflexy 1,5 Jam' => 125_000,
-                'Massage 1 Jam' => 100_000,
-                'Massage 1,5 Jam' => 125_000,
-                'Kombinasi' => 125_000,
-                'Kop / Kerokan' => 50_000,
-                'Bekam' => 120_000,
-                'Totok Wajah' => 50_000,
-                'Terapi Telinga' => 60_000,
+                'category_type' => 'service',
+                'commission_rate_regular' => 0.50,
+                'commission_rate_callout' => 0.50,
+            ],
+            'Retail' => [
+                'category_type' => 'retail',
+                'commission_rate_regular' => 0.00,
+                'commission_rate_callout' => 0.00,
+            ],
+            'Consumable' => [
+                'category_type' => 'consumable',
+                'commission_rate_regular' => 0.00,
+                'commission_rate_callout' => 0.00,
             ],
         ];
 
-        foreach ($products as $categoryName => $items) {
-            $category = \App\Models\ProductCategory::firstOrCreate(
-                ['category_name' => $categoryName],
-                ['category_description' => null]
-            );
+        $products = [
+            'Barbershop' => [
+                ['name' => 'Haircut Dewasa', 'price' => 60000],
+                ['name' => 'Haircut Anak', 'price' => 50000],
+                ['name' => 'Hair Colouring', 'price' => 60000, 'price_other' => 110000],
+                ['name' => 'Jasa Hair Colouring', 'price' => 60000],
+                ['name' => 'Shaving', 'price' => 25000],
+                ['name' => 'Keramas + Vit', 'price' => 20000],
+                ['name' => 'Royal Cut', 'price' => 90000],
+                ['name' => 'Luxury Cut', 'price' => 130000],
+            ],
+            'Reflexology' => [
+                ['name' => 'Reflexy 1 Jam', 'price' => 100000, 'price_other' => 150000],
+                ['name' => 'Reflexy 1,5 Jam', 'price' => 125000, 'price_other' => 175000],
+                ['name' => 'Massage 1 Jam', 'price' => 100000, 'price_other' => 150000],
+                ['name' => 'Massage 1,5 Jam', 'price' => 125000, 'price_other' => 175000],
+                ['name' => 'Kombinasi', 'price' => 125000, 'price_other' => 175000],
+                ['name' => 'Kop/Kerokan', 'price' => 50000, 'price_other' => 100000],
+                ['name' => 'Bekam', 'price' => 120000, 'price_other' => 170000],
+                ['name' => 'Totok Wajah', 'price' => 50000, 'price_other' => 100000],
+                ['name' => 'Terapi Telinga', 'price' => 60000, 'price_other' => 110000],
+            ],
+        ];
 
-            foreach ($items as $productName => $productPrice) {
-                \App\Models\Product::upsert(
-                    ['product_name' => $productName, 'category_id' => $category->id],
-                    ['product_price' => $productPrice, 'product_description' => null]
+        foreach ($categories as $name => $meta) {
+            ProductCategory::updateOrCreate(
+                ['category_name' => $name],
+                [
+                    'category_description' => null,
+                    'category_type' => $meta['category_type'],
+                    'commission_rate_regular' => $meta['commission_rate_regular'],
+                    'commission_rate_callout' => $meta['commission_rate_callout'],
+                ]
+            );
+        }
+
+        foreach ($products as $categoryName => $items) {
+            $category = ProductCategory::where('category_name', $categoryName)->first();
+
+            if (! $category) {
+                continue;
+            }
+
+            foreach ($items as $item) {
+                Product::updateOrCreate(
+                    [
+                        'product_name' => $item['name'],
+                        'category_id' => $category->id,
+                    ],
+                    [
+                        'product_price' => $item['price'],
+                        'product_price_other' => $item['price_other'] ?? null,
+                        'product_description' => null,
+                        'product_type' => 'service',
+                        'track_stock' => false,
+                        'is_active' => true,
+                    ]
                 );
             }
         }
