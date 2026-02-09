@@ -41,7 +41,7 @@ class InventoryMovementResource extends Resource
                     ->required(),
                 TextInput::make('qty')
                     ->label('Qty')
-                    ->numeric()
+                    ->integer()
                     ->required(),
                 TextInput::make('unit_cost')
                     ->label('Harga Modal')

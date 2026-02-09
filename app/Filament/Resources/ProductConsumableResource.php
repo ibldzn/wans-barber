@@ -38,7 +38,7 @@ class ProductConsumableResource extends Resource
                     ->required(),
                 TextInput::make('qty_per_unit')
                     ->label('Qty per Jasa')
-                    ->numeric()
+                    ->integer()
                     ->default(1),
             ])
                 ->columnSpanFull()

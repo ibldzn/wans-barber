@@ -19,7 +19,7 @@ class InventoryMovement extends Model
     ];
 
     protected $casts = [
-        'qty' => 'decimal:2',
+        'qty' => 'integer',
         'unit_cost' => 'decimal:2',
         'occurred_at' => 'datetime',
     ];

@@ -14,7 +14,7 @@ class ProductConsumable extends Model
     ];
 
     protected $casts = [
-        'qty_per_unit' => 'decimal:4',
+        'qty_per_unit' => 'integer',
     ];
 
     public function serviceProduct(): BelongsTo

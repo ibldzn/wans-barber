@@ -184,7 +184,7 @@ class SaleService
                     continue;
                 }
 
-                $movementQty = $qty * (float) $consumable->qty_per_unit;
+                $movementQty = $qty * $consumable->qty_per_unit;
 
                 InventoryMovement::create([
                     'product_id' => $consumableProduct->id,
