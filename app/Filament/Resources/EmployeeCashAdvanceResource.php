@@ -29,12 +29,17 @@ class EmployeeCashAdvanceResource extends Resource
                 Select::make('employee_id')
                     ->label('Pegawai')
                     ->relationship('employee', 'emp_name')
+                    ->preload()
                     ->searchable()
                     ->required(),
                 TextInput::make('amount')
                     ->label('Nominal')
                     ->numeric()
                     ->required(),
+                TextInput::make('installment_amount')
+                    ->label('Cicilan Default')
+                    ->numeric()
+                    ->helperText('Opsional. Jika ada pembayaran kasbon per payroll, nilai ini diabaikan.'),
                 DatePicker::make('date')
                     ->label('Tanggal')
                     ->required(),
@@ -60,6 +65,7 @@ class EmployeeCashAdvanceResource extends Resource
             ->columns([
                 TextColumn::make('employee.emp_name')->label('Pegawai')->searchable(),
                 TextColumn::make('amount')->label('Nominal')->money('IDR'),
+                TextColumn::make('installment_amount')->label('Cicilan')->money('IDR')->placeholder('-'),
                 TextColumn::make('date')->label('Tanggal')->date(),
                 TextColumn::make('status')->label('Status')->badge(),
             ])

@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\Employee;
 use App\Models\EmployeeCashAdvance;
+use App\Models\EmployeeCashAdvancePayment;
 use App\Models\FinanceCategory;
 use App\Models\FinancialTransaction;
 use App\Models\Payslip;
@@ -41,11 +42,81 @@ class PayrollService
                 $mealAllowance = $attendanceCount * (float) $employee->meal_allowance_per_day;
 
                 $advances = EmployeeCashAdvance::where('employee_id', $employee->id)
-                    ->where('status', 'open')
+                    ->whereIn('status', ['open'])
                     ->whereDate('date', '<=', $period->end_date)
                     ->get();
 
-                $deductionTotal = (float) $advances->sum('amount');
+                $advanceDeductions = [];
+                $deductionTotal = 0.0;
+
+                $advanceIds = $advances->pluck('id')->all();
+
+                $allPayments = EmployeeCashAdvancePayment::query()
+                    ->whereIn('employee_cash_advance_id', $advanceIds)
+                    ->get()
+                    ->groupBy('employee_cash_advance_id');
+
+                $periodPayments = EmployeeCashAdvancePayment::query()
+                    ->whereIn('employee_cash_advance_id', $advanceIds)
+                    ->where(function ($query) use ($period): void {
+                        $query->where('payroll_period_id', $period->id)
+                            ->orWhereBetween('paid_at', [$period->start_date, $period->end_date]);
+                    })
+                    ->get()
+                    ->groupBy('employee_cash_advance_id');
+
+                foreach ($advances as $advance) {
+                    $paymentsForAdvance = $allPayments->get($advance->id, collect());
+                    $totalPaid = (float) $paymentsForAdvance->sum('amount');
+                    $remaining = (float) $advance->amount - $totalPaid;
+
+                    if ($remaining <= 0) {
+                        if ($advance->status !== 'settled') {
+                            $advance->update([
+                                'status' => 'settled',
+                                'settled_at' => now(),
+                                'payroll_period_id' => $period->id,
+                            ]);
+                        }
+
+                        continue;
+                    }
+
+                    $paymentsThisPeriod = $periodPayments->get($advance->id, collect());
+
+                    if ($paymentsThisPeriod->isEmpty() && (float) ($advance->installment_amount ?? 0) > 0) {
+                        $autoAmount = min($remaining, (float) $advance->installment_amount);
+
+                        $autoPayment = EmployeeCashAdvancePayment::create([
+                            'employee_cash_advance_id' => $advance->id,
+                            'payroll_period_id' => $period->id,
+                            'amount' => $autoAmount,
+                            'paid_at' => $period->end_date,
+                            'description' => 'Auto payroll deduction',
+                        ]);
+
+                        $paymentsThisPeriod = collect([$autoPayment]);
+                        $totalPaid += $autoAmount;
+                        $remaining -= $autoAmount;
+                    }
+
+                    foreach ($paymentsThisPeriod as $payment) {
+                        $advanceDeductions[] = [
+                            'advance' => $advance,
+                            'payment' => $payment,
+                        ];
+
+                        $deductionTotal += (float) $payment->amount;
+                    }
+
+                    if ($remaining <= 0) {
+                        $advance->update([
+                            'status' => 'settled',
+                            'settled_at' => now(),
+                            'payroll_period_id' => $period->id,
+                        ]);
+                    }
+                }
 
                 $netPay = $baseSalary + $mealAllowance + (float) $commissionTotal - $deductionTotal;
 
@@ -65,20 +136,18 @@ class PayrollService
                     ]
                 );
 
-                $payslip->deductions()->delete();
+                $payslip->deductions()->where('source_type', 'cash_advance')->delete();
 
-                foreach ($advances as $advance) {
+                foreach ($advanceDeductions as $deduction) {
+                    $advance = $deduction['advance'];
+                    $payment = $deduction['payment'];
+
                     PayslipDeduction::create([
                         'payslip_id' => $payslip->id,
                         'source_type' => 'cash_advance',
-                        'amount' => $advance->amount,
-                        'description' => $advance->description,
-                    ]);
-
-                    $advance->update([
-                        'status' => 'settled',
-                        'settled_at' => now(),
-                        'payroll_period_id' => $period->id,
+                        'source_id' => $advance->id,
+                        'amount' => $payment->amount,
+                        'description' => $payment->description ?? $advance->description,
                     ]);
                 }
 

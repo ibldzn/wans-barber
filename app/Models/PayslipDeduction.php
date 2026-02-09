@@ -10,6 +10,7 @@ class PayslipDeduction extends Model
     protected $fillable = [
         'payslip_id',
         'source_type',
+        'source_id',
         'amount',
         'description',
     ];

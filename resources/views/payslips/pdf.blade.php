@@ -13,7 +13,13 @@
         th { background: #f3f3f3; text-align: left; }
         .summary td { border: none; padding: 4px 0; }
         .right { text-align: right; }
-        .footer { margin-top: 24px; display: flex; justify-content: space-between; }
+        .footer { margin-top: 24px; width: 100%; }
+        .footer-row { width: 100%; font-size: 12px; }
+        .footer-col { width: 49%; display: inline-block; vertical-align: top; }
+        .footer-col.right { text-align: right; }
+        .signature-space { height: 80px; }
+        .signature-line { padding-top: 8px; }
+        .signature-name { padding-top: 6px; }
     </style>
 </head>
 <body>
@@ -88,13 +94,18 @@
     @endif
 
     <div class="footer">
-        <div>
-            <div>Dibuat oleh</div>
-            <div style="margin-top: 40px;">_____________________</div>
+        <div class="footer-row">
+            <div class="footer-col">Dibuat oleh</div>
+            <div class="footer-col right">Diterima oleh</div>
         </div>
-        <div>
-            <div>Diterima oleh</div>
-            <div style="margin-top: 40px;">_____________________</div>
+        <div class="footer-row signature-space"></div>
+        <div class="footer-row">
+            <div class="footer-col signature-line">_____________________</div>
+            <div class="footer-col right signature-line">_____________________</div>
+        </div>
+        <div class="footer-row">
+            <div class="footer-col signature-name">Sistem</div>
+            <div class="footer-col right signature-name"></div>
         </div>
     </div>
 </body>
