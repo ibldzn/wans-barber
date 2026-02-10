@@ -1,59 +1,159 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# WAN'S Barbershop & Reflexology POS
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+Aplikasi POS kasir + inventory + finance + payroll berbasis Laravel 12 dan Filament v4. Fokusnya untuk operasional barbershop/reflexology dengan alur kerja cepat, laporan ringkas, dan slip gaji PDF.
 
-## About Laravel
+## Fitur Utama
+- POS kasir dengan input cepat, price tier (regular / callout), dan pilihan pegawai per item.
+- Inventory retail + consumable (pemakaian consumable otomatis dari penjualan jasa).
+- Ledger income/expense otomatis dari penjualan/pembelian + input manual.
+- Payroll berbasis absensi + komisi + potongan kasbon.
+- Kasbon bisa dicicil per payroll (nominal bisa berbeda tiap periode).
+- Slip gaji PDF A4.
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+## Teknologi
+- Laravel 12
+- Filament v4
+- Filament Shield + Spatie Permission
+- DomPDF
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+## Setup Lokal
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+### Prasyarat
+- PHP ^8.2
+- Composer
+- Node.js + npm
+- Database (MySQL/PostgreSQL/SQLite)
 
-## Learning Laravel
+### Instalasi
+1. Install dependencies:
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework. You can also check out [Laravel Learn](https://laravel.com/learn), where you will be guided through building a modern Laravel application.
+```bash
+composer install
+npm install
+```
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+2. Buat file env:
 
-## Laravel Sponsors
+```bash
+cp .env.example .env
+php artisan key:generate
+```
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+3. Set database di `.env`:
 
-### Premium Partners
+```
+DB_CONNECTION=mysql
+DB_HOST=127.0.0.1
+DB_PORT=3306
+DB_DATABASE=wans_barber
+DB_USERNAME=root
+DB_PASSWORD=
+```
 
-- **[Vehikl](https://vehikl.com)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Redberry](https://redberry.international/laravel-development)**
-- **[Active Logic](https://activelogic.com)**
+4. Migrasi + seeding:
 
-## Contributing
+```bash
+php artisan migrate
+php artisan db:seed
+php artisan db:seed --class=ShieldSeeder
+```
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+5. Build assets:
 
-## Code of Conduct
+```bash
+npm run build
+```
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+6. Jalankan aplikasi:
 
-## Security Vulnerabilities
+```bash
+php artisan serve
+```
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+Akses panel Filament di:
+```
+http://localhost:8000/kasir
+```
 
-## License
+### User Pertama (Super Admin)
+`ShieldSeeder` akan memberi role `super_admin` ke user pertama di tabel `users`.
+Jika belum ada user, buat via tinker:
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+```bash
+php artisan tinker
+>>> \App\Models\User::create([
+... 'name' => 'Owner',
+... 'email' => 'owner@local.test',
+... 'password' => bcrypt('password'),
+... ])
+```
+
+Lalu jalankan lagi:
+
+```bash
+php artisan db:seed --class=ShieldSeeder
+```
+
+## Cara Pakai
+
+### 1. Master Data
+Siapkan data awal berikut:
+- Product Categories (Service / Retail / Consumable) + komisi default.
+- Products (harga reguler, harga callout, type).
+- Employees.
+- Payment Methods.
+- Finance Categories.
+- Suppliers.
+
+### 2. POS (Sales)
+- Buka menu **POS**.
+- Pilih kasir, payment method, lalu tambahkan item.
+- Set pegawai per item (wajib untuk service).
+- Submit transaksi.
+
+Hasilnya otomatis:
+- Sale + Sale Items.
+- Inventory movement (out).
+- Ledger income (jasa / barang).
+
+### 3. Inventory
+- **Purchases** untuk menambah stok retail/consumable.
+- **Inventory Movements** untuk penyesuaian stok manual.
+- Produk service bisa punya mapping consumable (Product Consumables).
+
+### 4. Finance
+- **Financial Transactions** untuk income/expense manual.
+- Laporan bisa dilihat di **Reports**.
+
+### 5. Payroll & Absensi
+1. Input **Employee Attendance** per hari.
+2. Buat **Payroll Period**.
+3. Klik **Generate Payslips**.
+4. Buka **Payslips** untuk detail & PDF.
+5. Klik **Mark Paid** untuk mencatat expense gaji ke ledger.
+
+### 6. Kasbon & Cicilan
+- Buat kasbon di **Employee Cash Advances**.
+- Jika cicilan bervariasi tiap periode, input di menu **Pembayaran Kasbon**.
+  Contoh: bulan 1 = 1.000.000, bulan 2 = 300.000, bulan 3 = 500.000, dst.
+- Payroll akan memotong sesuai pembayaran yang ada di periode itu.
+- Jika tidak ada pembayaran tetapi kasbon punya **Cicilan Default**, sistem otomatis potong sesuai default.
+
+### 7. Laporan
+- **Rekap Metode Pembayaran**: filter tanggal lalu lihat total per metode + per tanggal.
+- **Laporan Laba Rugi**: ringkasan income vs expense.
+
+## Catatan Operasional
+- Set timezone: `Asia/Jakarta`.
+- Currency IDR (display tanpa desimal).
+- Satu transaksi = satu payment method.
+- Tidak ada fitur refund/return di MVP.
+
+## Troubleshooting
+- Menu tidak muncul / tombol hilang:
+  Jalankan `php artisan db:seed --class=ShieldSeeder` untuk regenerasi permission.
+- Setelah update resource baru:
+  Jalankan `php artisan db:seed --class=ShieldSeeder` lagi.
+- Login gagal setelah perubahan `.env`:
+  Jalankan `php artisan config:clear`.
+
