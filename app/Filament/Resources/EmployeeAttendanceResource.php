@@ -29,6 +29,7 @@ class EmployeeAttendanceResource extends Resource
                 Select::make('employee_id')
                     ->label('Pegawai')
                     ->relationship('employee', 'emp_name')
+                    ->preload()
                     ->searchable()
                     ->required(),
                 DatePicker::make('date')
