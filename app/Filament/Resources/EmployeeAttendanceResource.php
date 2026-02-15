@@ -22,6 +22,8 @@ class EmployeeAttendanceResource extends Resource
 
     protected static string|\UnitEnum|null $navigationGroup = 'Payroll';
 
+    protected static ?string $navigationLabel = 'Absensi Pegawai';
+
     public static function form(Schema $schema): Schema
     {
         return $schema->schema([

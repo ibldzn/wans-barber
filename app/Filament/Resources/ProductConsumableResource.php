@@ -22,6 +22,8 @@ class ProductConsumableResource extends Resource
 
     protected static string|\UnitEnum|null $navigationGroup = 'Inventory';
 
+    protected static ?string $navigationLabel = 'Konsumsi Bahan';
+
     public static function form(Schema $schema): Schema
     {
         return $schema->schema([

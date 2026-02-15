@@ -21,6 +21,8 @@ class ProductCategoryResource extends Resource
 
     protected static string|\UnitEnum|null $navigationGroup = 'Master Data';
 
+    protected static ?string $navigationLabel = 'Kategori Produk';
+
     public static function form(Schema $schema): Schema
     {
         return $schema->schema([

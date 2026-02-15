@@ -22,6 +22,8 @@ class EmployeeCashAdvanceResource extends Resource
 
     protected static string|\UnitEnum|null $navigationGroup = 'Payroll';
 
+    protected static ?string $navigationLabel = 'Kasbon Pegawai';
+
     public static function form(Schema $schema): Schema
     {
         return $schema->schema([

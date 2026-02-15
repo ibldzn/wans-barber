@@ -22,6 +22,8 @@ class FinancialTransactionResource extends Resource
 
     protected static string|\UnitEnum|null $navigationGroup = 'Finance';
 
+    protected static ?string $navigationLabel = 'Transaksi Keuangan';
+
     public static function form(Schema $schema): Schema
     {
         return $schema->schema([

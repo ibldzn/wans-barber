@@ -22,6 +22,8 @@ class SupplierResource extends Resource
 
     protected static string|\UnitEnum|null $navigationGroup = 'Master Data';
 
+    protected static ?string $navigationLabel = 'Supplier';
+
     public static function form(Schema $schema): Schema
     {
         return $schema->schema([

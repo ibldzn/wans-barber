@@ -24,7 +24,7 @@ class EmployeeCashAdvancePaymentResource extends Resource
 
     protected static string|\UnitEnum|null $navigationGroup = 'Payroll';
 
-    protected static ?string $navigationLabel = 'Cash Advance Payments';
+    protected static ?string $navigationLabel = 'Pembayaran Kasbon';
 
     public static function form(Schema $schema): Schema
     {

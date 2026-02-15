@@ -19,6 +19,8 @@ class PayslipResource extends Resource
 
     protected static string|\UnitEnum|null $navigationGroup = 'Payroll';
 
+    protected static ?string $navigationLabel = 'Slip Gaji';
+
     public static function table(Table $table): Table
     {
         return $table

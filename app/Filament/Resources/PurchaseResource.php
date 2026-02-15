@@ -25,6 +25,8 @@ class PurchaseResource extends Resource
 
     protected static string|\UnitEnum|null $navigationGroup = 'Inventory';
 
+    protected static ?string $navigationLabel = 'Pembelian';
+
     public static function form(Schema $schema): Schema
     {
         return $schema->schema([

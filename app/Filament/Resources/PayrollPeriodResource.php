@@ -25,6 +25,8 @@ class PayrollPeriodResource extends Resource
 
     protected static string|\UnitEnum|null $navigationGroup = 'Payroll';
 
+    protected static ?string $navigationLabel = 'Periode Payroll';
+
     public static function form(Schema $schema): Schema
     {
         return $schema->schema([

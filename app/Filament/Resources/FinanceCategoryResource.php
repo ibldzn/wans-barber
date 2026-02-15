@@ -23,6 +23,8 @@ class FinanceCategoryResource extends Resource
 
     protected static string|\UnitEnum|null $navigationGroup = 'Master Data';
 
+    protected static ?string $navigationLabel = 'Kategori Keuangan';
+
     public static function form(Schema $schema): Schema
     {
         return $schema->schema([

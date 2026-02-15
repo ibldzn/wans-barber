@@ -22,6 +22,8 @@ class SaleResource extends Resource
 
     protected static string|\UnitEnum|null $navigationGroup = 'POS';
 
+    protected static ?string $navigationLabel = 'Penjualan';
+
     public static function canCreate(): bool
     {
         return false;
@@ -50,8 +52,8 @@ class SaleResource extends Resource
             ->recordActions([
                 ViewAction::make()
                     ->label('Detail')
-                    ->visible(fn (Sale $record): bool => static::canView($record))
-                    ->url(fn (Sale $record): string => static::getUrl('view', ['record' => $record])),
+                    ->visible(fn(Sale $record): bool => static::canView($record))
+                    ->url(fn(Sale $record): string => static::getUrl('view', ['record' => $record])),
             ]);
     }
 

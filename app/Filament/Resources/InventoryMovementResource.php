@@ -22,6 +22,8 @@ class InventoryMovementResource extends Resource
 
     protected static string|\UnitEnum|null $navigationGroup = 'Inventory';
 
+    protected static ?string $navigationLabel = 'Pergerakan Stok';
+
     public static function form(Schema $schema): Schema
     {
         return $schema->schema([

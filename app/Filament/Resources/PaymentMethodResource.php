@@ -22,6 +22,8 @@ class PaymentMethodResource extends Resource
 
     protected static string|\UnitEnum|null $navigationGroup = 'Master Data';
 
+    protected static ?string $navigationLabel = 'Metode Pembayaran';
+
     public static function form(Schema $schema): Schema
     {
         return $schema->schema([

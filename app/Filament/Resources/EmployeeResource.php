@@ -23,6 +23,8 @@ class EmployeeResource extends Resource
 
     protected static string|\UnitEnum|null $navigationGroup = 'Master Data';
 
+    protected static ?string $navigationLabel = 'Pegawai';
+
     public static function form(Schema $schema): Schema
     {
         return $schema->schema([
