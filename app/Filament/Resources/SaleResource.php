@@ -4,6 +4,7 @@ namespace App\Filament\Resources;
 
 use App\Filament\Resources\SaleResource\Pages;
 use App\Models\Sale;
+use Filament\Actions\Action;
 use Filament\Actions\ViewAction;
 use Filament\Infolists\Components\RepeatableEntry;
 use Filament\Infolists\Components\RepeatableEntry\TableColumn;
@@ -54,6 +55,18 @@ class SaleResource extends Resource
                     ->label('Detail')
                     ->visible(fn(Sale $record): bool => static::canView($record))
                     ->url(fn(Sale $record): string => static::getUrl('view', ['record' => $record])),
+                Action::make('printThermal')
+                    ->label('Print 58mm')
+                    ->icon('heroicon-o-printer')
+                    ->url(fn(Sale $record): string => route('sales.print.thermal', $record))
+                    ->openUrlInNewTab()
+                    ->visible(fn(Sale $record): bool => static::canView($record)),
+                Action::make('downloadEscPos')
+                    ->label('ESC/POS RAW')
+                    ->icon('heroicon-o-arrow-down-tray')
+                    ->url(fn(Sale $record): string => route('sales.print.thermal', ['sale' => $record, 'raw' => 1]))
+                    ->openUrlInNewTab()
+                    ->visible(fn(Sale $record): bool => static::canView($record)),
             ]);
     }
 
