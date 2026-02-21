@@ -64,6 +64,18 @@
                 <td class="right">Rp {{ number_format($payslip->commission_total, 0, ',', '.') }}</td>
             </tr>
             <tr>
+                <td>Total Pinjaman</td>
+                <td class="right">Rp {{ number_format($payslip->loan_total_before, 0, ',', '.') }}</td>
+            </tr>
+            <tr>
+                <td>Nominal Cicilan</td>
+                <td class="right">Rp {{ number_format($payslip->loan_installment_amount, 0, ',', '.') }}</td>
+            </tr>
+            <tr>
+                <td>Sisa Pinjaman</td>
+                <td class="right">Rp {{ number_format($payslip->loan_remaining_after, 0, ',', '.') }}</td>
+            </tr>
+            <tr>
                 <td>Potongan</td>
                 <td class="right">Rp {{ number_format($payslip->deduction_total, 0, ',', '.') }}</td>
             </tr>

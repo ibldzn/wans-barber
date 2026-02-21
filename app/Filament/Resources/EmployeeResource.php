@@ -53,6 +53,10 @@ class EmployeeResource extends Resource
                     ->label('Gaji Harian')
                     ->numeric()
                     ->default(0),
+                TextInput::make('monthly_salary')
+                    ->label('Gaji Bulanan')
+                    ->numeric()
+                    ->default(0),
                 TextInput::make('meal_allowance_per_day')
                     ->label('Uang Makan Harian')
                     ->numeric()
@@ -90,6 +94,7 @@ class EmployeeResource extends Resource
                 TextColumn::make('role')->label('Role')->badge(),
                 TextColumn::make('emp_phone')->label('No HP'),
                 TextColumn::make('daily_wage')->label('Gaji Harian')->money('IDR'),
+                TextColumn::make('monthly_salary')->label('Gaji Bulanan')->money('IDR'),
                 ToggleColumn::make('is_active')->label('Aktif'),
             ])
             ->headerActions([

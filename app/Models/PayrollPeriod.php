@@ -9,6 +9,7 @@ class PayrollPeriod extends Model
 {
     protected $fillable = [
         'name',
+        'period_type',
         'start_date',
         'end_date',
         'status',

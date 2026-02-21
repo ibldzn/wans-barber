@@ -41,7 +41,7 @@ class EmployeeCashAdvanceResource extends Resource
                 TextInput::make('installment_amount')
                     ->label('Cicilan Default')
                     ->numeric()
-                    ->helperText('Opsional. Jika ada pembayaran kasbon per payroll, nilai ini diabaikan.'),
+                    ->helperText('Opsional untuk referensi internal. Payroll tidak lagi memotong kasbon otomatis.'),
                 DatePicker::make('date')
                     ->label('Tanggal')
                     ->required(),

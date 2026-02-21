@@ -27,6 +27,10 @@ class PayslipResource extends Resource
             ->columns([
                 TextColumn::make('employee.emp_name')->label('Pegawai')->searchable(),
                 TextColumn::make('payrollPeriod.name')->label('Periode'),
+                TextColumn::make('payrollPeriod.period_type')->label('Tipe')->badge(),
+                TextColumn::make('loan_total_before')->label('Total Pinjaman')->money('IDR'),
+                TextColumn::make('loan_installment_amount')->label('Nominal Cicilan')->money('IDR'),
+                TextColumn::make('loan_remaining_after')->label('Sisa Pinjaman')->money('IDR'),
                 TextColumn::make('net_pay')->label('Total Dibayar')->money('IDR'),
                 TextColumn::make('paid_at')->label('Paid At')->dateTime(),
             ])
