@@ -26,30 +26,13 @@ class SaleService
      */
     public function createFromPos(array $data, User $user): Sale
     {
-        $items = Arr::get($data, 'items', []);
+        $manualItems = $this->extractManualPosItems(
+            Arr::get($data, 'items', []),
+        );
 
-        if (empty($items)) {
-            throw ValidationException::withMessages([
-                'items' => 'Minimal 1 item diperlukan.',
-            ]);
-        }
-
-        $productIds = collect($items)
-            ->pluck('product_id')
-            ->filter()
-            ->unique()
-            ->values();
-
-        if ($productIds->isEmpty()) {
-            throw ValidationException::withMessages([
-                'items' => 'Produk wajib dipilih.',
-            ]);
-        }
-
-        $products = Product::with(['category', 'consumables.consumableProduct'])
-            ->whereIn('id', $productIds)
-            ->get()
-            ->keyBy('id');
+        $preparedManualItems = $this->prepareManualItems($manualItems);
+        $preparedAutoConsumableItems = $this->prepareAutoConsumableItems($preparedManualItems);
+        $preparedItems = [...$preparedManualItems, ...$preparedAutoConsumableItems];
 
         $cashierId = Arr::get($data, 'cashier_id') ?: $user->employee_id;
 
@@ -71,58 +54,21 @@ class SaleService
             ? Carbon::parse(Arr::get($data, 'paid_at'))
             : now();
 
-        return DB::transaction(function () use ($data, $items, $products, $cashierId, $paymentMethodId, $paidAt, $user): Sale {
-            $preparedItems = [];
+        return DB::transaction(function () use ($data, $preparedItems, $cashierId, $paymentMethodId, $paidAt, $user): Sale {
             $subtotal = 0;
             $serviceTotal = 0;
             $retailTotal = 0;
 
-            foreach ($items as $index => $item) {
-                $productId = $item['product_id'] ?? null;
-                $product = $productId ? $products->get($productId) : null;
-
-                if (! $product) {
-                    throw ValidationException::withMessages([
-                        "items.{$index}.product_id" => 'Produk tidak ditemukan.',
-                    ]);
-                }
-
-                $qty = max(1, (int) ($item['qty'] ?? 1));
-                $priceTier = ($item['price_tier'] ?? 'regular') === 'callout' ? 'callout' : 'regular';
-                $unitPrice = $this->resolveUnitPrice($product, $priceTier);
-                $lineTotal = $unitPrice * $qty;
-
-                $employeeId = $item['employee_id'] ?? null;
-                $employee = $employeeId ? Employee::find($employeeId) : null;
-
-                if ($product->product_type === 'service' && ! $employee) {
-                    throw ValidationException::withMessages([
-                        "items.{$index}.employee_id" => 'Pegawai wajib diisi untuk jasa.',
-                    ]);
-                }
-
-                $commissionRate = $this->commissionService->resolveRate($product, $employee, $priceTier);
-                $commissionAmount = round($lineTotal * $commissionRate, 0);
+            foreach ($preparedItems as $prepared) {
+                $lineTotal = (float) $prepared['line_total'];
 
                 $subtotal += $lineTotal;
 
-                if ($product->product_type === 'service') {
+                if ($prepared['product']->product_type === 'service') {
                     $serviceTotal += $lineTotal;
                 } else {
                     $retailTotal += $lineTotal;
                 }
-
-                $preparedItems[] = [
-                    'product' => $product,
-                    'employee_id' => $employee?->id,
-                    'qty' => $qty,
-                    'price_tier' => $priceTier,
-                    'unit_price' => $unitPrice,
-                    'line_total' => $lineTotal,
-                    'commission_rate' => $commissionRate,
-                    'commission_amount' => $commissionAmount,
-                    'notes' => $item['notes'] ?? null,
-                ];
             }
 
             $discount = (float) ($data['discount'] ?? 0);
@@ -165,6 +111,199 @@ class SaleService
         });
     }
 
+    /**
+     * @param  array<int, mixed>  $items
+     * @return array<int, array<string, mixed>>
+     */
+    protected function extractManualPosItems(array $items): array
+    {
+        return collect($items)
+            ->filter(fn ($item): bool => is_array($item))
+            ->filter(fn (array $item): bool => ($item['line_type'] ?? 'manual') !== 'auto_consumable')
+            ->values()
+            ->all();
+    }
+
+    /**
+     * @param  array<int, array<string, mixed>>  $items
+     * @return array<int, array{
+     *     product: Product,
+     *     employee_id: int|null,
+     *     qty: int,
+     *     price_tier: string,
+     *     unit_price: float,
+     *     line_total: float,
+     *     commission_rate: float,
+     *     commission_amount: float,
+     *     notes: string|null,
+     *     source: string
+     * }>
+     */
+    protected function prepareManualItems(array $items): array
+    {
+        if (empty($items)) {
+            throw ValidationException::withMessages([
+                'items' => 'Minimal 1 item diperlukan.',
+            ]);
+        }
+
+        $productIds = collect($items)
+            ->pluck('product_id')
+            ->filter()
+            ->unique()
+            ->values();
+
+        if ($productIds->isEmpty()) {
+            throw ValidationException::withMessages([
+                'items' => 'Produk wajib dipilih.',
+            ]);
+        }
+
+        $products = Product::with(['category', 'consumables.consumableProduct'])
+            ->whereIn('id', $productIds)
+            ->get()
+            ->keyBy('id');
+
+        $preparedManualItems = [];
+
+        foreach ($items as $index => $item) {
+            $productId = $item['product_id'] ?? null;
+            $product = $productId ? $products->get($productId) : null;
+
+            if (! $product) {
+                throw ValidationException::withMessages([
+                    "items.{$index}.product_id" => 'Produk tidak ditemukan.',
+                ]);
+            }
+
+            $qty = max(1, (int) ($item['qty'] ?? 1));
+            $priceTier = ($item['price_tier'] ?? 'regular') === 'callout' ? 'callout' : 'regular';
+            $unitPrice = $this->resolveUnitPrice($product, $priceTier);
+            $lineTotal = $unitPrice * $qty;
+
+            $employeeId = $item['employee_id'] ?? null;
+            $employee = $employeeId ? Employee::find($employeeId) : null;
+
+            if ($product->product_type === 'service' && ! $employee) {
+                throw ValidationException::withMessages([
+                    "items.{$index}.employee_id" => 'Pegawai wajib diisi untuk jasa.',
+                ]);
+            }
+
+            $commissionRate = $this->commissionService->resolveRate($product, $employee, $priceTier);
+            $commissionAmount = round($lineTotal * $commissionRate, 0);
+
+            $preparedManualItems[] = [
+                'product' => $product,
+                'employee_id' => $employee?->id,
+                'qty' => $qty,
+                'price_tier' => $priceTier,
+                'unit_price' => $unitPrice,
+                'line_total' => $lineTotal,
+                'commission_rate' => $commissionRate,
+                'commission_amount' => $commissionAmount,
+                'notes' => $item['notes'] ?? null,
+                'source' => 'manual',
+            ];
+        }
+
+        return $preparedManualItems;
+    }
+
+    /**
+     * @param  array<int, array{
+     *     product: Product,
+     *     employee_id: int|null,
+     *     qty: int,
+     *     price_tier: string,
+     *     unit_price: float,
+     *     line_total: float,
+     *     commission_rate: float,
+     *     commission_amount: float,
+     *     notes: string|null,
+     *     source: string
+     * }>  $preparedManualItems
+     * @return array<int, array{
+     *     product: Product,
+     *     employee_id: int|null,
+     *     qty: int,
+     *     price_tier: string,
+     *     unit_price: float,
+     *     line_total: float,
+     *     commission_rate: float,
+     *     commission_amount: float,
+     *     notes: string|null,
+     *     source: string
+     * }>
+     */
+    protected function prepareAutoConsumableItems(array $preparedManualItems): array
+    {
+        $preparedAutoItems = [];
+
+        foreach ($preparedManualItems as $index => $prepared) {
+            $serviceProduct = $prepared['product'];
+
+            if ($serviceProduct->product_type !== 'service') {
+                continue;
+            }
+
+            foreach ($serviceProduct->consumables as $consumable) {
+                $consumableProduct = $consumable->consumableProduct;
+
+                if (! $consumableProduct) {
+                    throw ValidationException::withMessages([
+                        "items.{$index}.product_id" => "Mapping consumable untuk {$serviceProduct->product_name} tidak valid.",
+                    ]);
+                }
+
+                if (! $consumableProduct->is_active) {
+                    throw ValidationException::withMessages([
+                        "items.{$index}.product_id" => "Consumable {$consumableProduct->product_name} sedang nonaktif.",
+                    ]);
+                }
+
+                if ($consumableProduct->product_type !== 'consumable') {
+                    throw ValidationException::withMessages([
+                        "items.{$index}.product_id" => "{$consumableProduct->product_name} harus bertipe consumable.",
+                    ]);
+                }
+
+                $qtyPerUnit = (int) $consumable->qty_per_unit;
+
+                if ($qtyPerUnit <= 0) {
+                    throw ValidationException::withMessages([
+                        "items.{$index}.product_id" => "Qty per unit consumable {$consumableProduct->product_name} harus lebih besar dari 0.",
+                    ]);
+                }
+
+                $unitPrice = (float) $consumableProduct->product_price;
+
+                if ($unitPrice <= 0) {
+                    throw ValidationException::withMessages([
+                        "items.{$index}.product_id" => "Harga consumable {$consumableProduct->product_name} belum valid.",
+                    ]);
+                }
+
+                $qty = $prepared['qty'] * $qtyPerUnit;
+
+                $preparedAutoItems[] = [
+                    'product' => $consumableProduct,
+                    'employee_id' => null,
+                    'qty' => $qty,
+                    'price_tier' => 'regular',
+                    'unit_price' => $unitPrice,
+                    'line_total' => $unitPrice * $qty,
+                    'commission_rate' => 0.0,
+                    'commission_amount' => 0.0,
+                    'notes' => "Auto consumable dari {$serviceProduct->product_name}",
+                    'source' => 'auto_consumable',
+                ];
+            }
+        }
+
+        return $preparedAutoItems;
+    }
+
     protected function resolveUnitPrice(Product $product, string $priceTier): float
     {
         if ($priceTier === 'callout' && $product->product_price_other) {
@@ -176,31 +315,6 @@ class SaleService
 
     protected function handleInventoryForItem(Sale $sale, Product $product, int $qty, Carbon $paidAt): void
     {
-        if ($product->product_type === 'service') {
-            foreach ($product->consumables as $consumable) {
-                $consumableProduct = $consumable->consumableProduct;
-
-                if (! $consumableProduct || ! $consumableProduct->track_stock) {
-                    continue;
-                }
-
-                $movementQty = $qty * $consumable->qty_per_unit;
-
-                InventoryMovement::create([
-                    'product_id' => $consumableProduct->id,
-                    'type' => 'out',
-                    'qty' => $movementQty,
-                    'unit_cost' => $consumableProduct->cost_price,
-                    'reference_type' => Sale::class,
-                    'reference_id' => $sale->id,
-                    'occurred_at' => $paidAt,
-                    'notes' => 'Consumable usage for sale ' . $sale->invoice_no,
-                ]);
-            }
-
-            return;
-        }
-
         if (! $product->track_stock) {
             return;
         }
