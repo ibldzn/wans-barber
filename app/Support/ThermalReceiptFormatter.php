@@ -6,8 +6,7 @@ class ThermalReceiptFormatter
 {
     public function __construct(
         private readonly int $width = 32,
-    ) {
-    }
+    ) {}
 
     public function width(): int
     {

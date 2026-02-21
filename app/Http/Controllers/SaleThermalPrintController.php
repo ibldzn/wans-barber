@@ -22,9 +22,13 @@ class SaleThermalPrintController extends Controller
             'items.employee:id,emp_name',
         ]);
 
-        $receiptLines = $this->buildReceiptLines($sale);
+        $isRaw = $request->boolean('raw');
+        $lineWidth = $isRaw ? 32 : 38;
+        $receiptLines = $this->buildReceiptLines($sale, includeBrandHeader: $isRaw, lineWidth: $lineWidth);
+        $brandName = $this->brandName();
+        $brandAddressLines = $this->brandAddressLines();
 
-        if ($request->boolean('raw')) {
+        if ($isRaw) {
             $filename = 'invoice-' . $sale->invoice_no . '-escpos.bin';
 
             return response($this->buildEscPosPayload($receiptLines), 200, [
@@ -33,18 +37,25 @@ class SaleThermalPrintController extends Controller
             ]);
         }
 
-        return view('sales.thermal-print', compact('sale', 'receiptLines'));
+        return view('sales.thermal-print', compact('sale', 'receiptLines', 'brandName', 'brandAddressLines'));
     }
 
     /**
      * @return array<int, string>
      */
-    private function buildReceiptLines(Sale $sale): array
+    private function buildReceiptLines(Sale $sale, bool $includeBrandHeader = true, int $lineWidth = 32): array
     {
-        $formatter = new ThermalReceiptFormatter(32);
+        $formatter = new ThermalReceiptFormatter($lineWidth);
         $lines = [];
 
-        $lines[] = $formatter->center("Wan's Barber & Reflexology");
+        if ($includeBrandHeader) {
+            $lines[] = $formatter->center($this->brandName());
+
+            foreach ($this->brandAddressLines() as $addressLine) {
+                $lines[] = $formatter->center($addressLine);
+            }
+        }
+
         $lines[] = $formatter->hr('=');
 
         $labelWidth = 10;
@@ -121,6 +132,23 @@ class SaleThermalPrintController extends Controller
     private function money(float $amount): string
     {
         return 'Rp ' . number_format($amount, 0, ',', '.');
+    }
+
+    private function brandName(): string
+    {
+        return "Wan's Barber & Reflexology";
+    }
+
+    /**
+     * @return array<int, string>
+     */
+    private function brandAddressLines(): array
+    {
+        return [
+            'Jl. Boulevard, Grand Wisata',
+            'Blok AA 11 No 26',
+            'Lambang Jaya, Tambun Selatan',
+        ];
     }
 
     /**

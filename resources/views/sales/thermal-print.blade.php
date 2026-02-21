@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>{{ $sale->invoice_no }} - Thermal 58mm</title>
+    <title>{{ $sale->invoice_no }}</title>
     <style>
         * {
             box-sizing: border-box;
@@ -22,18 +22,46 @@
 
         .receipt {
             width: 58mm;
-            padding: 2mm 1.5mm;
+            padding: 1.2mm 0.8mm;
+        }
+
+        .brand-header {
+            width: 100%;
+            margin-bottom: 1mm;
+        }
+
+        .brand-meta {
+            width: 100%;
+            text-align: center;
+            padding: 0 0.6mm;
+            transform: translateX(8mm);
+            font-family: "Courier New", Courier, monospace;
+            color: #000;
+        }
+
+        .brand-name {
+            font-size: 11px;
+            font-weight: 900;
+            line-height: 1.1;
+        }
+
+        .brand-address {
+            font-size: 9.2px;
+            font-weight: 800;
+            line-height: 1.1;
+            margin-top: 1px;
         }
 
         .receipt-text {
             margin: 0;
             white-space: pre;
             font-family: "Courier New", Courier, monospace;
-            font-size: 13px;
-            line-height: 1.2;
+            font-size: 11.4px;
+            line-height: 1.18;
             font-weight: 900;
             letter-spacing: 0;
             text-rendering: geometricPrecision;
+            width: 100%;
         }
 
         .no-print {
@@ -80,6 +108,15 @@
 </div>
 
 <div class="receipt">
+    <div class="brand-header">
+        <div class="brand-meta">
+            <div class="brand-name">{{ $brandName }}</div>
+            @foreach ($brandAddressLines as $addressLine)
+                <div class="brand-address">{{ $addressLine }}</div>
+            @endforeach
+        </div>
+    </div>
+
     <pre class="receipt-text">{{ implode("\n", $receiptLines) }}</pre>
 </div>
 </body>
