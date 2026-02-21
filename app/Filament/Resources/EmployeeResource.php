@@ -3,6 +3,7 @@
 namespace App\Filament\Resources;
 
 use App\Filament\Resources\EmployeeResource\Pages;
+use App\Filament\Support\HasSafeDeleteActions;
 use App\Models\Employee;
 use Filament\Actions\CreateAction;
 use Filament\Forms\Components\Select;
@@ -17,6 +18,8 @@ use Filament\Tables\Table;
 
 class EmployeeResource extends Resource
 {
+    use HasSafeDeleteActions;
+
     protected static ?string $model = Employee::class;
 
     protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-user-group';
@@ -49,10 +52,6 @@ class EmployeeResource extends Resource
                 TextInput::make('bank_account')
                     ->label('No Rekening')
                     ->maxLength(255),
-                TextInput::make('daily_wage')
-                    ->label('Gaji Harian')
-                    ->numeric()
-                    ->default(0),
                 TextInput::make('monthly_salary')
                     ->label('Gaji Bulanan')
                     ->numeric()
@@ -61,16 +60,6 @@ class EmployeeResource extends Resource
                     ->label('Uang Makan Harian')
                     ->numeric()
                     ->default(0),
-                TextInput::make('commission_rate_override_regular')
-                    ->label('Override Komisi Reguler')
-                    ->numeric()
-                    ->minValue(0)
-                    ->maxValue(1),
-                TextInput::make('commission_rate_override_callout')
-                    ->label('Override Komisi Panggilan')
-                    ->numeric()
-                    ->minValue(0)
-                    ->maxValue(1),
                 Toggle::make('is_active')
                     ->label('Aktif')
                     ->default(true),
@@ -93,7 +82,6 @@ class EmployeeResource extends Resource
                 TextColumn::make('emp_name')->label('Nama')->searchable()->sortable(),
                 TextColumn::make('role')->label('Role')->badge(),
                 TextColumn::make('emp_phone')->label('No HP'),
-                TextColumn::make('daily_wage')->label('Gaji Harian')->money('IDR'),
                 TextColumn::make('monthly_salary')->label('Gaji Bulanan')->money('IDR'),
                 ToggleColumn::make('is_active')->label('Aktif'),
             ])
@@ -102,6 +90,10 @@ class EmployeeResource extends Resource
             ])
             ->recordActions([
                 \Filament\Actions\EditAction::make(),
+                static::makeDeleteAction(suggestArchive: true),
+            ])
+            ->toolbarActions([
+                static::makeDeleteBulkAction(suggestArchive: true),
             ]);
     }
 

@@ -3,6 +3,7 @@
 namespace App\Filament\Resources;
 
 use App\Filament\Resources\CashExpenseResource\Pages;
+use App\Filament\Support\HasSafeDeleteActions;
 use App\Models\FinanceCategory;
 use App\Models\FinancialTransaction;
 use App\Models\PaymentMethod;
@@ -21,6 +22,8 @@ use Illuminate\Database\Eloquent\Builder;
 
 class CashExpenseResource extends Resource
 {
+    use HasSafeDeleteActions;
+
     protected static ?string $model = FinancialTransaction::class;
 
     protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-wallet';
@@ -80,6 +83,10 @@ class CashExpenseResource extends Resource
             ])
             ->recordActions([
                 \Filament\Actions\EditAction::make(),
+                static::makeDeleteAction(),
+            ])
+            ->toolbarActions([
+                static::makeDeleteBulkAction(),
             ]);
     }
 

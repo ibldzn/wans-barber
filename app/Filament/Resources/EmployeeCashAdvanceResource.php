@@ -3,6 +3,7 @@
 namespace App\Filament\Resources;
 
 use App\Filament\Resources\EmployeeCashAdvanceResource\Pages;
+use App\Filament\Support\HasSafeDeleteActions;
 use App\Models\EmployeeCashAdvance;
 use Filament\Actions\CreateAction;
 use Filament\Forms\Components\DatePicker;
@@ -16,6 +17,8 @@ use Filament\Tables\Table;
 
 class EmployeeCashAdvanceResource extends Resource
 {
+    use HasSafeDeleteActions;
+
     protected static ?string $model = EmployeeCashAdvance::class;
 
     protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-currency-dollar';
@@ -76,6 +79,10 @@ class EmployeeCashAdvanceResource extends Resource
             ])
             ->recordActions([
                 \Filament\Actions\EditAction::make(),
+                static::makeDeleteAction(),
+            ])
+            ->toolbarActions([
+                static::makeDeleteBulkAction(),
             ]);
     }
 

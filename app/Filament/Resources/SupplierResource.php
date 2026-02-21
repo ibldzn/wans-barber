@@ -3,6 +3,7 @@
 namespace App\Filament\Resources;
 
 use App\Filament\Resources\SupplierResource\Pages;
+use App\Filament\Support\HasSafeDeleteActions;
 use App\Models\Supplier;
 use Filament\Actions\CreateAction;
 use Filament\Forms\Components\TextInput;
@@ -16,6 +17,8 @@ use Filament\Tables\Table;
 
 class SupplierResource extends Resource
 {
+    use HasSafeDeleteActions;
+
     protected static ?string $model = Supplier::class;
 
     protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-truck';
@@ -54,6 +57,10 @@ class SupplierResource extends Resource
             ])
             ->recordActions([
                 \Filament\Actions\EditAction::make(),
+                static::makeDeleteAction(suggestArchive: true),
+            ])
+            ->toolbarActions([
+                static::makeDeleteBulkAction(suggestArchive: true),
             ]);
     }
 

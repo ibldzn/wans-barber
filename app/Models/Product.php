@@ -19,8 +19,6 @@ class Product extends Model
         'cost_price',
         'reorder_level',
         'is_active',
-        'commission_rate_override_regular',
-        'commission_rate_override_callout',
     ];
 
     protected $casts = [
@@ -29,8 +27,6 @@ class Product extends Model
         'track_stock' => 'boolean',
         'cost_price' => 'decimal:2',
         'is_active' => 'boolean',
-        'commission_rate_override_regular' => 'decimal:4',
-        'commission_rate_override_callout' => 'decimal:4',
     ];
 
     public function category(): BelongsTo

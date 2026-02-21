@@ -40,4 +40,40 @@ class EmployeeCashAdvance extends Model
     {
         return $this->hasMany(EmployeeCashAdvancePayment::class);
     }
+
+    public function getTotalPaid(?int $excludePaymentId = null): float
+    {
+        $query = $this->payments();
+
+        if ($excludePaymentId) {
+            $query->where('id', '!=', $excludePaymentId);
+        }
+
+        return (float) $query->sum('amount');
+    }
+
+    public function getRemainingAmount(?int $excludePaymentId = null): float
+    {
+        return max(0, (float) $this->amount - $this->getTotalPaid($excludePaymentId));
+    }
+
+    public function syncSettlementStatus(): void
+    {
+        $isSettled = $this->getRemainingAmount() <= 0;
+
+        if ($isSettled) {
+            $this->update([
+                'status' => 'settled',
+                'settled_at' => $this->settled_at ?? now(),
+            ]);
+
+            return;
+        }
+
+        $this->update([
+            'status' => 'open',
+            'settled_at' => null,
+            'payroll_period_id' => null,
+        ]);
+    }
 }

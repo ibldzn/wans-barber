@@ -3,6 +3,7 @@
 namespace App\Filament\Resources;
 
 use App\Filament\Resources\ProductResource\Pages;
+use App\Filament\Support\HasSafeDeleteActions;
 use App\Models\Product;
 use Filament\Actions\CreateAction;
 use Filament\Forms\Components\Select;
@@ -17,6 +18,8 @@ use Filament\Tables\Table;
 
 class ProductResource extends Resource
 {
+    use HasSafeDeleteActions;
+
     protected static ?string $model = Product::class;
 
     protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-cube';
@@ -66,16 +69,6 @@ class ProductResource extends Resource
                 TextInput::make('reorder_level')
                     ->label('Reorder Level')
                     ->numeric(),
-                TextInput::make('commission_rate_override_regular')
-                    ->label('Override Komisi Reguler')
-                    ->numeric()
-                    ->minValue(0)
-                    ->maxValue(1),
-                TextInput::make('commission_rate_override_callout')
-                    ->label('Override Komisi Panggilan')
-                    ->numeric()
-                    ->minValue(0)
-                    ->maxValue(1),
                 Toggle::make('is_active')
                     ->label('Aktif')
                     ->default(true),
@@ -110,6 +103,10 @@ class ProductResource extends Resource
             ])
             ->recordActions([
                 \Filament\Actions\EditAction::make(),
+                static::makeDeleteAction(suggestArchive: true),
+            ])
+            ->toolbarActions([
+                static::makeDeleteBulkAction(suggestArchive: true),
             ]);
     }
 

@@ -3,6 +3,7 @@
 namespace App\Filament\Resources;
 
 use App\Filament\Resources\PaymentMethodResource\Pages;
+use App\Filament\Support\HasSafeDeleteActions;
 use App\Models\PaymentMethod;
 use Filament\Actions\CreateAction;
 use Filament\Forms\Components\TextInput;
@@ -16,6 +17,8 @@ use Filament\Tables\Table;
 
 class PaymentMethodResource extends Resource
 {
+    use HasSafeDeleteActions;
+
     protected static ?string $model = PaymentMethod::class;
 
     protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-banknotes';
@@ -51,6 +54,10 @@ class PaymentMethodResource extends Resource
             ])
             ->recordActions([
                 \Filament\Actions\EditAction::make(),
+                static::makeDeleteAction(suggestArchive: true),
+            ])
+            ->toolbarActions([
+                static::makeDeleteBulkAction(suggestArchive: true),
             ]);
     }
 

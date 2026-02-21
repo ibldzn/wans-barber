@@ -3,6 +3,7 @@
 namespace App\Filament\Resources;
 
 use App\Filament\Resources\EmployeeAttendanceResource\Pages;
+use App\Filament\Support\HasSafeDeleteActions;
 use App\Models\EmployeeAttendance;
 use Filament\Actions\CreateAction;
 use Filament\Forms\Components\DatePicker;
@@ -16,6 +17,8 @@ use Filament\Tables\Table;
 
 class EmployeeAttendanceResource extends Resource
 {
+    use HasSafeDeleteActions;
+
     protected static ?string $model = EmployeeAttendance::class;
 
     protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-calendar-days';
@@ -66,6 +69,10 @@ class EmployeeAttendanceResource extends Resource
             ])
             ->recordActions([
                 \Filament\Actions\EditAction::make(),
+                static::makeDeleteAction(),
+            ])
+            ->toolbarActions([
+                static::makeDeleteBulkAction(),
             ]);
     }
 

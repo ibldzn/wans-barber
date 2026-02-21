@@ -3,6 +3,7 @@
 namespace App\Filament\Resources;
 
 use App\Filament\Resources\ProductConsumableResource\Pages;
+use App\Filament\Support\HasSafeDeleteActions;
 use App\Models\Product;
 use App\Models\ProductConsumable;
 use Filament\Actions\CreateAction;
@@ -16,6 +17,8 @@ use Filament\Tables\Table;
 
 class ProductConsumableResource extends Resource
 {
+    use HasSafeDeleteActions;
+
     protected static ?string $model = ProductConsumable::class;
 
     protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-rectangle-group';
@@ -62,6 +65,10 @@ class ProductConsumableResource extends Resource
             ])
             ->recordActions([
                 \Filament\Actions\EditAction::make(),
+                static::makeDeleteAction(),
+            ])
+            ->toolbarActions([
+                static::makeDeleteBulkAction(),
             ]);
     }
 

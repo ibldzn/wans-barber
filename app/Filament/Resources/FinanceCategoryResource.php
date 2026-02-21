@@ -3,6 +3,7 @@
 namespace App\Filament\Resources;
 
 use App\Filament\Resources\FinanceCategoryResource\Pages;
+use App\Filament\Support\HasSafeDeleteActions;
 use App\Models\FinanceCategory;
 use Filament\Actions\CreateAction;
 use Filament\Forms\Components\Select;
@@ -17,6 +18,8 @@ use Filament\Tables\Table;
 
 class FinanceCategoryResource extends Resource
 {
+    use HasSafeDeleteActions;
+
     protected static ?string $model = FinanceCategory::class;
 
     protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-clipboard-document-list';
@@ -59,6 +62,16 @@ class FinanceCategoryResource extends Resource
             ])
             ->recordActions([
                 \Filament\Actions\EditAction::make(),
+                static::makeDeleteAction(
+                    guard: fn (FinanceCategory $record): bool => static::canRemoveCategory($record),
+                    guardFailureMessage: 'Kategori system atau kategori yang sudah dipakai transaksi tidak bisa dihapus.',
+                ),
+            ])
+            ->toolbarActions([
+                static::makeDeleteBulkAction(
+                    guard: fn (FinanceCategory $record): bool => static::canRemoveCategory($record),
+                    guardFailureMessage: 'Sebagian kategori system/terpakai transaksi tidak bisa dihapus.',
+                ),
             ]);
     }
 
@@ -69,5 +82,14 @@ class FinanceCategoryResource extends Resource
             'create' => Pages\CreateFinanceCategory::route('/create'),
             'edit' => Pages\EditFinanceCategory::route('/{record}/edit'),
         ];
+    }
+
+    protected static function canRemoveCategory(FinanceCategory $record): bool
+    {
+        if ($record->is_system) {
+            return false;
+        }
+
+        return ! $record->transactions()->exists();
     }
 }

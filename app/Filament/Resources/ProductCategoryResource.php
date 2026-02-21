@@ -3,6 +3,7 @@
 namespace App\Filament\Resources;
 
 use App\Filament\Resources\ProductCategoryResource\Pages;
+use App\Filament\Support\HasSafeDeleteActions;
 use App\Models\ProductCategory;
 use Filament\Actions\CreateAction;
 use Filament\Forms\Components\Select;
@@ -15,6 +16,8 @@ use Filament\Tables\Table;
 
 class ProductCategoryResource extends Resource
 {
+    use HasSafeDeleteActions;
+
     protected static ?string $model = ProductCategory::class;
 
     protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-rectangle-stack';
@@ -73,6 +76,10 @@ class ProductCategoryResource extends Resource
             ])
             ->recordActions([
                 \Filament\Actions\EditAction::make(),
+                static::makeDeleteAction(),
+            ])
+            ->toolbarActions([
+                static::makeDeleteBulkAction(),
             ]);
     }
 

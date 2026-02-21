@@ -13,21 +13,15 @@ class Employee extends Model
         'emp_phone',
         'role',
         'bank_account',
-        'daily_wage',
         'monthly_salary',
         'meal_allowance_per_day',
-        'commission_rate_override_regular',
-        'commission_rate_override_callout',
         'is_active',
         'user_id',
     ];
 
     protected $casts = [
-        'daily_wage' => 'decimal:2',
         'monthly_salary' => 'decimal:2',
         'meal_allowance_per_day' => 'decimal:2',
-        'commission_rate_override_regular' => 'decimal:4',
-        'commission_rate_override_callout' => 'decimal:4',
         'is_active' => 'boolean',
     ];
 

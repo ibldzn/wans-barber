@@ -3,6 +3,7 @@
 namespace App\Filament\Resources;
 
 use App\Filament\Resources\FinancialTransactionResource\Pages;
+use App\Filament\Support\HasSafeDeleteActions;
 use App\Models\FinancialTransaction;
 use Filament\Actions\CreateAction;
 use Filament\Forms\Components\DateTimePicker;
@@ -16,6 +17,8 @@ use Filament\Tables\Table;
 
 class FinancialTransactionResource extends Resource
 {
+    use HasSafeDeleteActions;
+
     protected static ?string $model = FinancialTransaction::class;
 
     protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-banknotes';
@@ -75,7 +78,19 @@ class FinancialTransactionResource extends Resource
                 CreateAction::make(),
             ])
             ->recordActions([
-                \Filament\Actions\EditAction::make(),
+                \Filament\Actions\EditAction::make()
+                    ->visible(fn (FinancialTransaction $record): bool => static::canEdit($record) && static::isManualEntry($record)),
+                static::makeDeleteAction(
+                    guard: fn (FinancialTransaction $record): bool => static::isManualEntry($record),
+                    guardFailureMessage: 'Transaksi otomatis dari modul lain tidak bisa dihapus.',
+                    hideWhenGuardFails: true,
+                ),
+            ])
+            ->toolbarActions([
+                static::makeDeleteBulkAction(
+                    guard: fn (FinancialTransaction $record): bool => static::isManualEntry($record),
+                    guardFailureMessage: 'Sebagian transaksi otomatis dari modul lain tidak bisa dihapus.',
+                ),
             ]);
     }
 
@@ -86,5 +101,10 @@ class FinancialTransactionResource extends Resource
             'create' => Pages\CreateFinancialTransaction::route('/create'),
             'edit' => Pages\EditFinancialTransaction::route('/{record}/edit'),
         ];
+    }
+
+    protected static function isManualEntry(FinancialTransaction $record): bool
+    {
+        return blank($record->reference_type);
     }
 }

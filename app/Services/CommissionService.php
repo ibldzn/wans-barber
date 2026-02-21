@@ -9,25 +9,9 @@ class CommissionService
 {
     public function resolveRate(Product $product, ?Employee $employee, string $priceTier): float
     {
+        unset($employee);
+
         $tier = $priceTier === 'callout' ? 'callout' : 'regular';
-
-        $productOverride = $tier === 'callout'
-            ? $product->commission_rate_override_callout
-            : $product->commission_rate_override_regular;
-
-        if ($productOverride !== null) {
-            return (float) $productOverride;
-        }
-
-        if ($employee) {
-            $employeeOverride = $tier === 'callout'
-                ? $employee->commission_rate_override_callout
-                : $employee->commission_rate_override_regular;
-
-            if ($employeeOverride !== null) {
-                return (float) $employeeOverride;
-            }
-        }
 
         $category = $product->category;
 

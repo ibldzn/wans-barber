@@ -3,21 +3,27 @@
 namespace App\Filament\Resources;
 
 use App\Filament\Resources\EmployeeCashAdvancePaymentResource\Pages;
+use App\Filament\Support\HasSafeDeleteActions;
 use App\Models\EmployeeCashAdvance;
 use App\Models\EmployeeCashAdvancePayment;
 use App\Models\PayrollPeriod;
 use Filament\Actions\CreateAction;
 use Filament\Forms\Components\DatePicker;
+use Filament\Forms\Components\Placeholder;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Resources\Resource;
 use Filament\Schemas\Components\Section;
+use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Schema;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
+use Illuminate\Validation\ValidationException;
 
 class EmployeeCashAdvancePaymentResource extends Resource
 {
+    use HasSafeDeleteActions;
+
     protected static ?string $model = EmployeeCashAdvancePayment::class;
 
     protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-banknotes';
@@ -42,9 +48,24 @@ class EmployeeCashAdvancePaymentResource extends Resource
                         $amount = number_format((float) $record->amount, 0, ',', '.');
                         return "{$employee} - Rp {$amount}";
                     })
+                    ->live()
                     ->searchable()
                     ->preload()
                     ->required(),
+                Placeholder::make('remaining_cash_advance')
+                    ->label('Sisa Kasbon')
+                    ->content(function (Get $get, ?EmployeeCashAdvancePayment $record = null): string {
+                        $advanceId = (int) ($get('employee_cash_advance_id') ?? 0);
+
+                        if ($advanceId <= 0) {
+                            return '-';
+                        }
+
+                        $excludePaymentId = $record?->id;
+                        $remaining = static::getRemainingAmount($advanceId, $excludePaymentId);
+
+                        return 'Rp ' . number_format($remaining, 0, ',', '.');
+                    }),
                 Select::make('payroll_period_id')
                     ->label('Periode Payroll')
                     ->relationship('payrollPeriod', 'name')
@@ -83,6 +104,18 @@ class EmployeeCashAdvancePaymentResource extends Resource
             ])
             ->recordActions([
                 \Filament\Actions\EditAction::make(),
+                static::makeDeleteAction(
+                    afterDelete: function (EmployeeCashAdvancePayment $record): void {
+                        static::syncCashAdvanceStatusById((int) $record->employee_cash_advance_id);
+                    },
+                ),
+            ])
+            ->toolbarActions([
+                static::makeDeleteBulkAction(
+                    afterDelete: function (EmployeeCashAdvancePayment $record): void {
+                        static::syncCashAdvanceStatusById((int) $record->employee_cash_advance_id);
+                    },
+                ),
             ]);
     }
 
@@ -93,5 +126,62 @@ class EmployeeCashAdvancePaymentResource extends Resource
             'create' => Pages\CreateEmployeeCashAdvancePayment::route('/create'),
             'edit' => Pages\EditEmployeeCashAdvancePayment::route('/{record}/edit'),
         ];
+    }
+
+    public static function validatePaymentAmount(int $cashAdvanceId, float $amount, ?int $excludePaymentId = null): void
+    {
+        $cashAdvance = EmployeeCashAdvance::query()->find($cashAdvanceId);
+
+        if (! $cashAdvance) {
+            throw ValidationException::withMessages([
+                'employee_cash_advance_id' => 'Kasbon tidak ditemukan.',
+            ]);
+        }
+
+        $remaining = $cashAdvance->getRemainingAmount($excludePaymentId);
+
+        if ($remaining <= 0) {
+            throw ValidationException::withMessages([
+                'employee_cash_advance_id' => 'Kasbon ini sudah lunas.',
+            ]);
+        }
+
+        if ($amount <= 0) {
+            throw ValidationException::withMessages([
+                'amount' => 'Nominal pembayaran harus lebih besar dari 0.',
+            ]);
+        }
+
+        if ($amount > $remaining) {
+            throw ValidationException::withMessages([
+                'amount' => 'Nominal pembayaran melebihi sisa kasbon (Rp ' . number_format($remaining, 0, ',', '.') . ').',
+            ]);
+        }
+    }
+
+    public static function syncCashAdvanceStatusById(?int $cashAdvanceId): void
+    {
+        if (! $cashAdvanceId) {
+            return;
+        }
+
+        $cashAdvance = EmployeeCashAdvance::query()->find($cashAdvanceId);
+
+        if (! $cashAdvance) {
+            return;
+        }
+
+        $cashAdvance->syncSettlementStatus();
+    }
+
+    protected static function getRemainingAmount(int $cashAdvanceId, ?int $excludePaymentId = null): float
+    {
+        $cashAdvance = EmployeeCashAdvance::query()->find($cashAdvanceId);
+
+        if (! $cashAdvance) {
+            return 0.0;
+        }
+
+        return $cashAdvance->getRemainingAmount($excludePaymentId);
     }
 }
