@@ -43,6 +43,12 @@ class EmployeeCashAdvance extends Model
 
     public function getTotalPaid(?int $excludePaymentId = null): float
     {
+        if ($this->relationLoaded('payments')) {
+            return (float) $this->payments
+                ->when($excludePaymentId, fn ($payments) => $payments->where('id', '!=', $excludePaymentId))
+                ->sum('amount');
+        }
+
         $query = $this->payments();
 
         if ($excludePaymentId) {

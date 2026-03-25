@@ -5,7 +5,9 @@ namespace App\Services;
 use App\Models\FinanceCategory;
 use App\Models\FinancialTransaction;
 use App\Models\InventoryMovement;
+use App\Models\Product;
 use App\Models\Purchase;
+use Illuminate\Validation\ValidationException;
 use Illuminate\Support\Facades\DB;
 
 class PurchaseService
@@ -14,14 +16,34 @@ class PurchaseService
     {
         $purchase->loadMissing('items.product');
 
-        if ($purchase->items->isEmpty()) {
-            return;
-        }
-
         DB::transaction(function () use ($purchase): void {
             $totalAmount = 0;
 
+            InventoryMovement::query()
+                ->where('reference_type', Purchase::class)
+                ->where('reference_id', $purchase->id)
+                ->delete();
+
+            FinancialTransaction::query()
+                ->where('reference_type', Purchase::class)
+                ->where('reference_id', $purchase->id)
+                ->delete();
+
+            if ($purchase->items->isEmpty()) {
+                if ((float) $purchase->total_amount !== 0.0) {
+                    $purchase->update(['total_amount' => 0]);
+                }
+
+                return;
+            }
+
             foreach ($purchase->items as $item) {
+                if (! $item->product || ! $this->isPurchasableProduct($item->product)) {
+                    throw ValidationException::withMessages([
+                        "items.{$item->id}.product_id" => 'Produk service atau non-stock tidak bisa dibeli lewat modul pembelian.',
+                    ]);
+                }
+
                 $totalAmount += (float) $item->subtotal;
 
                 InventoryMovement::create([
@@ -62,5 +84,12 @@ class PurchaseService
                 );
             }
         });
+    }
+
+    protected function isPurchasableProduct(Product $product): bool
+    {
+        return $product->is_active
+            && $product->track_stock
+            && in_array($product->product_type, ['retail', 'consumable'], true);
     }
 }

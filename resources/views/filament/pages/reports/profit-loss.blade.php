@@ -1,22 +1,50 @@
 <x-filament-panels::page>
     {{ $this->form }}
 
-    <x-filament::section heading="Ringkasan" style="margin-top: 1.5rem;">
+    <div class="grid gap-4 md:grid-cols-3" style="margin-top: 1.5rem;">
+        <x-filament::section heading="Gross Income">
+            <p class="text-2xl font-semibold">
+                Rp {{ number_format($grossIncome, 0, ',', '.') }}
+            </p>
+        </x-filament::section>
+
+        <x-filament::section heading="Total Expense">
+            <p class="text-2xl font-semibold">
+                Rp {{ number_format($totalExpense, 0, ',', '.') }}
+            </p>
+        </x-filament::section>
+
+        <x-filament::section heading="Net Profit">
+            <p class="text-2xl font-semibold">
+                Rp {{ number_format($netProfit, 0, ',', '.') }}
+            </p>
+        </x-filament::section>
+    </div>
+
+    <x-filament::section heading="Rekap Harian" style="margin-top: 2rem;">
         <div class="fi-prose">
             <table>
+                <thead>
+                    <tr>
+                        <th>Tanggal</th>
+                        <th style="text-align: right;">Income</th>
+                        <th style="text-align: right;">Expense</th>
+                        <th style="text-align: right;">Net</th>
+                    </tr>
+                </thead>
                 <tbody>
-                    <tr>
-                        <td>Total Income</td>
-                        <td style="text-align: right;">Rp {{ number_format($incomeTotal, 0, ',', '.') }}</td>
-                    </tr>
-                    <tr>
-                        <td>Total Expense</td>
-                        <td style="text-align: right;">Rp {{ number_format($expenseTotal, 0, ',', '.') }}</td>
-                    </tr>
-                    <tr>
-                        <td>Net</td>
-                        <td style="text-align: right;">Rp {{ number_format($netTotal, 0, ',', '.') }}</td>
-                    </tr>
+                    @forelse ($dailyRows as $row)
+                        <tr>
+                            <td>{{ \Illuminate\Support\Carbon::parse($row['date'])->format('d/m/Y') }}</td>
+                            <td style="text-align: right;">Rp {{ number_format($row['income'], 0, ',', '.') }}</td>
+                            <td style="text-align: right;">Rp {{ number_format($row['expense'], 0, ',', '.') }}</td>
+                            <td style="text-align: right;">Rp {{ number_format($row['net'], 0, ',', '.') }}</td>
+                        </tr>
+                    @empty
+                        <tr>
+                            <td colspan="4">Tidak ada data.</td>
+                        </tr>
+                    @endforelse
                 </tbody>
             </table>
         </div>

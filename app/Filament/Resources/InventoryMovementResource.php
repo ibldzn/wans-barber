@@ -3,66 +3,22 @@
 namespace App\Filament\Resources;
 
 use App\Filament\Resources\InventoryMovementResource\Pages;
-use App\Filament\Support\HasSafeDeleteActions;
 use App\Models\InventoryMovement;
-use Filament\Actions\CreateAction;
-use Filament\Forms\Components\DateTimePicker;
-use Filament\Forms\Components\Select;
-use Filament\Forms\Components\TextInput;
+use App\Models\Purchase;
+use App\Models\Sale;
 use Filament\Resources\Resource;
-use Filament\Schemas\Components\Section;
-use Filament\Schemas\Schema;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 
 class InventoryMovementResource extends Resource
 {
-    use HasSafeDeleteActions;
-
     protected static ?string $model = InventoryMovement::class;
 
     protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-arrows-right-left';
 
     protected static string|\UnitEnum|null $navigationGroup = 'Inventory';
 
-    protected static ?string $navigationLabel = 'Pergerakan Stok';
-
-    public static function form(Schema $schema): Schema
-    {
-        return $schema->schema([
-            Section::make('Pergerakan Stok')->schema([
-                Select::make('product_id')
-                    ->label('Produk')
-                    ->relationship('product', 'product_name')
-                    ->searchable()
-                    ->required(),
-                Select::make('type')
-                    ->label('Tipe')
-                    ->options([
-                        'in' => 'In',
-                        'out' => 'Out',
-                        'adjustment' => 'Adjustment',
-                    ])
-                    ->required(),
-                TextInput::make('qty')
-                    ->label('Qty')
-                    ->integer()
-                    ->required(),
-                TextInput::make('unit_cost')
-                    ->label('Harga Modal')
-                    ->numeric(),
-                DateTimePicker::make('occurred_at')
-                    ->label('Tanggal')
-                    ->default(now())
-                    ->required(),
-                TextInput::make('notes')
-                    ->label('Catatan'),
-            ])
-                ->columnSpanFull()
-                ->inlineLabel()
-                ->columns(1),
-        ]);
-    }
+    protected static ?string $navigationLabel = 'Log Pergerakan Stok';
 
     public static function table(Table $table): Table
     {
@@ -72,39 +28,57 @@ class InventoryMovementResource extends Resource
                 TextColumn::make('type')->label('Tipe')->badge(),
                 TextColumn::make('qty')->label('Qty'),
                 TextColumn::make('unit_cost')->label('Harga Modal')->money('IDR'),
+                TextColumn::make('source')
+                    ->label('Sumber')
+                    ->state(fn (InventoryMovement $record): string => static::getReferenceLabel($record->reference_type)),
+                TextColumn::make('reference_id')
+                    ->label('Referensi')
+                    ->state(fn (InventoryMovement $record): string => static::getReferenceCode($record))
+                    ->placeholder('-'),
                 TextColumn::make('occurred_at')->label('Tanggal')->dateTime(),
+                TextColumn::make('notes')->label('Catatan')->wrap()->toggleable(),
             ])
-            ->headerActions([
-                CreateAction::make(),
-            ])
-            ->recordActions([
-                \Filament\Actions\EditAction::make()
-                    ->visible(fn (InventoryMovement $record): bool => static::canEdit($record) && static::isManualEntry($record)),
-                static::makeDeleteAction(
-                    guard: fn (InventoryMovement $record): bool => static::isManualEntry($record),
-                    guardFailureMessage: 'Pergerakan stok otomatis dari modul lain tidak bisa dihapus.',
-                    hideWhenGuardFails: true,
-                ),
-            ])
-            ->toolbarActions([
-                static::makeDeleteBulkAction(
-                    guard: fn (InventoryMovement $record): bool => static::isManualEntry($record),
-                    guardFailureMessage: 'Sebagian pergerakan stok otomatis dari modul lain tidak bisa dihapus.',
-                ),
-            ]);
+            ->defaultSort('occurred_at', 'desc');
     }
 
     public static function getPages(): array
     {
         return [
             'index' => Pages\ListInventoryMovements::route('/'),
-            'create' => Pages\CreateInventoryMovement::route('/create'),
-            'edit' => Pages\EditInventoryMovement::route('/{record}/edit'),
         ];
     }
 
-    protected static function isManualEntry(InventoryMovement $record): bool
+    public static function canCreate(): bool
     {
-        return blank($record->reference_type);
+        return false;
+    }
+
+    public static function canEdit($record): bool
+    {
+        return false;
+    }
+
+    public static function canDelete($record): bool
+    {
+        return false;
+    }
+
+    protected static function getReferenceLabel(?string $referenceType): string
+    {
+        return match ($referenceType) {
+            Sale::class => 'Penjualan',
+            Purchase::class => 'Pembelian',
+            null => 'Adjustment Manual',
+            default => class_basename((string) $referenceType),
+        };
+    }
+
+    protected static function getReferenceCode(InventoryMovement $record): string
+    {
+        if (blank($record->reference_type) || blank($record->reference_id)) {
+            return 'Manual';
+        }
+
+        return '#' . $record->reference_id;
     }
 }

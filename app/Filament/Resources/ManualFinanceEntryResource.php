@@ -2,15 +2,11 @@
 
 namespace App\Filament\Resources;
 
-use App\Filament\Resources\CashExpenseResource\Pages;
+use App\Filament\Resources\ManualFinanceEntryResource\Pages;
 use App\Filament\Support\HasSafeDeleteActions;
-use App\Models\FinanceCategory;
 use App\Models\FinancialTransaction;
-use App\Models\PaymentMethod;
 use Filament\Actions\CreateAction;
 use Filament\Forms\Components\DateTimePicker;
-use Filament\Forms\Components\Hidden;
-use Filament\Forms\Components\Placeholder;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Resources\Resource;
@@ -20,43 +16,47 @@ use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 
-class CashExpenseResource extends Resource
+class ManualFinanceEntryResource extends Resource
 {
     use HasSafeDeleteActions;
 
     protected static ?string $model = FinancialTransaction::class;
 
-    protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-wallet';
+    protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-pencil-square';
 
     protected static string|\UnitEnum|null $navigationGroup = 'Finance';
 
-    protected static ?string $navigationLabel = 'Pengeluaran Operasional';
+    protected static ?string $navigationLabel = 'Transaksi Manual';
 
     public static function form(Schema $schema): Schema
     {
         return $schema->schema([
-            Section::make('Pengeluaran Harian')->schema([
-                Hidden::make('type')->default('expense')->dehydrated(true),
-                Hidden::make('payment_method_id')
-                    ->default(fn () => static::getCashPaymentMethodId())
-                    ->dehydrated(true),
+            Section::make('Transaksi Manual')->schema([
+                Select::make('type')
+                    ->label('Tipe')
+                    ->options([
+                        'income' => 'Income',
+                        'expense' => 'Expense',
+                    ])
+                    ->required(),
                 Select::make('category_id')
-                    ->label('Kategori Pengeluaran')
-                    ->options(fn () => FinanceCategory::query()->where('type', 'expense')->pluck('name', 'id'))
+                    ->label('Kategori')
+                    ->relationship('category', 'name')
                     ->searchable()
                     ->required(),
                 TextInput::make('sub_category')
                     ->label('Subkategori')
-                    ->helperText('Opsional. Contoh: Token Listrik, PAM, Internet.')
                     ->maxLength(255),
-                Placeholder::make('payment_method')
-                    ->label('Metode Pembayaran')
-                    ->content('Cash (otomatis)'),
                 TextInput::make('amount')
                     ->label('Nominal')
                     ->numeric()
                     ->minValue(1)
                     ->required(),
+                Select::make('payment_method_id')
+                    ->label('Metode Pembayaran')
+                    ->relationship('paymentMethod', 'method_name')
+                    ->searchable()
+                    ->preload(),
                 DateTimePicker::make('occurred_at')
                     ->label('Tanggal')
                     ->default(now())
@@ -75,12 +75,13 @@ class CashExpenseResource extends Resource
     {
         return $table
             ->columns([
+                TextColumn::make('type')->label('Tipe')->badge(),
                 TextColumn::make('category.name')->label('Kategori')->searchable(),
-                TextColumn::make('sub_category')->label('Subkategori')->searchable()->placeholder('-'),
+                TextColumn::make('sub_category')->label('Subkategori')->placeholder('-'),
                 TextColumn::make('amount')->label('Nominal')->money('IDR'),
+                TextColumn::make('paymentMethod.method_name')->label('Metode')->placeholder('-'),
                 TextColumn::make('occurred_at')->label('Tanggal')->dateTime(),
                 TextColumn::make('description')->label('Deskripsi')->wrap(),
-                TextColumn::make('creator.name')->label('Input Oleh')->toggleable(),
             ])
             ->defaultSort('occurred_at', 'desc')
             ->headerActions([
@@ -97,59 +98,42 @@ class CashExpenseResource extends Resource
 
     public static function getEloquentQuery(): Builder
     {
-        $cashMethodId = static::getCashPaymentMethodId();
-
-        if (! $cashMethodId) {
-            return parent::getEloquentQuery()->whereRaw('1 = 0');
-        }
-
-        return parent::getEloquentQuery()
-            ->where('type', 'expense')
-            ->where('payment_method_id', $cashMethodId);
-    }
-
-    public static function canViewAny(): bool
-    {
-        return static::canAccessByRole() && (bool) static::getCashPaymentMethodId();
-    }
-
-    public static function canCreate(): bool
-    {
-        return static::canAccessByRole() && (bool) static::getCashPaymentMethodId();
-    }
-
-    public static function canEdit($record): bool
-    {
-        return static::canAccessByRole() && (bool) static::getCashPaymentMethodId();
-    }
-
-    public static function canDelete($record): bool
-    {
-        return static::canAccessByRole() && (bool) static::getCashPaymentMethodId();
+        return parent::getEloquentQuery()->whereNull('reference_type');
     }
 
     public static function getPages(): array
     {
         return [
-            'index' => Pages\ListCashExpenses::route('/'),
-            'create' => Pages\CreateCashExpense::route('/create'),
-            'edit' => Pages\EditCashExpense::route('/{record}/edit'),
+            'index' => Pages\ListManualFinanceEntries::route('/'),
+            'create' => Pages\CreateManualFinanceEntry::route('/create'),
+            'edit' => Pages\EditManualFinanceEntry::route('/{record}/edit'),
         ];
     }
 
-    protected static function getCashPaymentMethodId(): ?int
+    public static function canViewAny(): bool
     {
-        return PaymentMethod::query()->where('method_name', 'Cash')->value('id');
+        return static::canAccessByRole();
+    }
+
+    public static function canCreate(): bool
+    {
+        return static::canAccessByRole();
+    }
+
+    public static function canEdit($record): bool
+    {
+        return static::canAccessByRole();
+    }
+
+    public static function canDelete($record): bool
+    {
+        return static::canAccessByRole();
     }
 
     protected static function canAccessByRole(): bool
     {
         $user = auth()->user();
 
-        if (! $user) {
-            return false;
-        }
-
-        return $user->isAdmin() || $user->isKasir();
+        return (bool) ($user && $user->isAdmin());
     }
 }

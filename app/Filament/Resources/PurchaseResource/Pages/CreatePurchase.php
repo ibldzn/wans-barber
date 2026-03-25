@@ -13,6 +13,7 @@ class CreatePurchase extends CreateRecord
     protected function mutateFormDataBeforeCreate(array $data): array
     {
         $items = $data['items'] ?? [];
+        PurchaseResource::validatePurchasableItems($items);
         $total = collect($items)->sum('subtotal');
         $data['total_amount'] = $total;
         $data['created_by'] = auth()->id();

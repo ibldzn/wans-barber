@@ -12,6 +12,7 @@ use Filament\Forms\Components\TextInput;
 use Filament\Resources\Resource;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
+use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 
@@ -67,12 +68,39 @@ class EmployeeCashAdvanceResource extends Resource
     public static function table(Table $table): Table
     {
         return $table
+            ->modifyQueryUsing(function ($query) {
+                return $query
+                    ->with(['employee', 'payments'])
+                    ->orderByRaw("CASE WHEN status = 'open' THEN 0 ELSE 1 END")
+                    ->orderByDesc('date');
+            })
             ->columns([
                 TextColumn::make('employee.emp_name')->label('Pegawai')->searchable(),
                 TextColumn::make('amount')->label('Nominal')->money('IDR'),
+                TextColumn::make('total_paid')
+                    ->label('Sudah Dibayar')
+                    ->state(fn(EmployeeCashAdvance $record): float => $record->getTotalPaid())
+                    ->money('IDR'),
+                TextColumn::make('remaining_amount')
+                    ->label('Sisa Kasbon')
+                    ->state(fn(EmployeeCashAdvance $record): float => $record->getRemainingAmount())
+                    ->money('IDR'),
                 TextColumn::make('installment_amount')->label('Cicilan')->money('IDR')->placeholder('-'),
                 TextColumn::make('date')->label('Tanggal')->date(),
                 TextColumn::make('status')->label('Status')->badge(),
+            ])
+            ->filters([
+                SelectFilter::make('employee_id')
+                    ->label('Pegawai')
+                    ->relationship('employee', 'emp_name')
+                    ->searchable()
+                    ->preload(),
+                SelectFilter::make('status')
+                    ->label('Status')
+                    ->options([
+                        'open' => 'Open',
+                        'settled' => 'Settled',
+                    ]),
             ])
             ->headerActions([
                 CreateAction::make(),

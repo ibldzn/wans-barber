@@ -4,6 +4,7 @@ namespace App\Filament\Pages\Reports;
 
 use App\Models\FinancialTransaction;
 use BezhanSalleh\FilamentShield\Traits\HasPageShield;
+use Carbon\CarbonPeriod;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Concerns\InteractsWithForms;
 use Filament\Pages\Page;
@@ -20,7 +21,9 @@ class ProfitLossPage extends Page
 
     protected static string|\UnitEnum|null $navigationGroup = 'Reports';
 
-    protected static ?string $title = 'Laporan Laba Rugi';
+    protected static ?string $title = 'Rekap Pendapatan & Pengeluaran';
+
+    protected static ?string $navigationLabel = 'Pendapatan vs Pengeluaran';
 
     protected string $view = 'filament.pages.reports.profit-loss';
 
@@ -42,10 +45,12 @@ class ProfitLossPage extends Page
                     DatePicker::make('start_date')
                         ->label('Mulai')
                         ->live()
+                        ->beforeOrEqual('end_date')
                         ->required(),
                     DatePicker::make('end_date')
                         ->label('Selesai')
                         ->live()
+                        ->afterOrEqual('start_date')
                         ->required(),
                 ])
                     ->columnSpanFull()
@@ -60,36 +65,70 @@ class ProfitLossPage extends Page
         $start = Carbon::parse($this->data['start_date'] ?? now()->startOfMonth())->startOfDay();
         $end = Carbon::parse($this->data['end_date'] ?? now()->endOfMonth())->endOfDay();
 
-        $income = FinancialTransaction::where('type', 'income')
+        $transactions = FinancialTransaction::query()
             ->whereBetween('occurred_at', [$start, $end]);
 
-        $expense = FinancialTransaction::where('type', 'expense')
-            ->whereBetween('occurred_at', [$start, $end]);
+        $incomeTotal = (float) (clone $transactions)->where('type', 'income')->sum('amount');
+        $expenseTotal = (float) (clone $transactions)->where('type', 'expense')->sum('amount');
+        $netTotal = $incomeTotal - $expenseTotal;
 
-        $incomeTotal = (float) $income->sum('amount');
-        $expenseTotal = (float) $expense->sum('amount');
-        $net = $incomeTotal - $expenseTotal;
-
-        $incomeByCategory = FinancialTransaction::with('category')
+        $incomeByCategory = FinancialTransaction::query()
+            ->with('category')
             ->where('type', 'income')
             ->whereBetween('occurred_at', [$start, $end])
             ->get()
-            ->groupBy(fn($item) => $item->category?->name ?? 'Uncategorized')
-            ->map(fn($items) => $items->sum('amount'))
+            ->groupBy(fn ($item) => $item->category?->name ?? 'Uncategorized')
+            ->map(fn ($items) => (float) $items->sum('amount'))
+            ->sortDesc()
             ->toArray();
 
-        $expenseByCategory = FinancialTransaction::with('category')
+        $expenseByCategory = FinancialTransaction::query()
+            ->with('category')
             ->where('type', 'expense')
             ->whereBetween('occurred_at', [$start, $end])
             ->get()
-            ->groupBy(fn($item) => $item->category?->name ?? 'Uncategorized')
-            ->map(fn($items) => $items->sum('amount'))
+            ->groupBy(fn ($item) => $item->category?->name ?? 'Uncategorized')
+            ->map(fn ($items) => (float) $items->sum('amount'))
+            ->sortDesc()
             ->toArray();
 
+        $dailyTotals = FinancialTransaction::query()
+            ->selectRaw('DATE(occurred_at) as tx_date, type, SUM(amount) as total_amount')
+            ->whereBetween('occurred_at', [$start, $end])
+            ->groupBy('tx_date', 'type')
+            ->get()
+            ->groupBy('tx_date')
+            ->map(function ($items): array {
+                $income = (float) $items->firstWhere('type', 'income')?->total_amount;
+                $expense = (float) $items->firstWhere('type', 'expense')?->total_amount;
+
+                return [
+                    'income' => $income,
+                    'expense' => $expense,
+                ];
+            });
+
+        $dailyRows = collect(CarbonPeriod::create($start->copy()->startOfDay(), $end->copy()->startOfDay()))
+            ->map(function (Carbon $date) use ($dailyTotals): array {
+                $key = $date->toDateString();
+                $income = (float) ($dailyTotals->get($key)['income'] ?? 0);
+                $expense = (float) ($dailyTotals->get($key)['expense'] ?? 0);
+
+                return [
+                    'date' => $key,
+                    'income' => $income,
+                    'expense' => $expense,
+                    'net' => $income - $expense,
+                ];
+            })
+            ->values()
+            ->all();
+
         return [
-            'incomeTotal' => $incomeTotal,
-            'expenseTotal' => $expenseTotal,
-            'netTotal' => $net,
+            'grossIncome' => $incomeTotal,
+            'totalExpense' => $expenseTotal,
+            'netProfit' => $netTotal,
+            'dailyRows' => $dailyRows,
             'incomeByCategory' => $incomeByCategory,
             'expenseByCategory' => $expenseByCategory,
             'start' => $start,

@@ -3,19 +3,26 @@
 namespace App\Filament\Resources\PayrollPeriodResource\Pages;
 
 use App\Filament\Resources\PayrollPeriodResource;
+use Filament\Notifications\Notification;
 use Filament\Resources\Pages\CreateRecord;
+use Illuminate\Validation\ValidationException;
 
 class CreatePayrollPeriod extends CreateRecord
 {
     protected static string $resource = PayrollPeriodResource::class;
 
-    /**
-     * @param  array<string, mixed>  $data
-     */
-    protected function mutateFormDataBeforeCreate(array $data): array
+    protected function afterValidate(): void
     {
-        PayrollPeriodResource::validatePeriodRules($data);
+        try {
+            PayrollPeriodResource::validatePeriodRules($this->data ?? [], statePath: 'data');
+        } catch (ValidationException $exception) {
+            Notification::make()
+                ->title('Periode payroll tidak valid')
+                ->body(collect($exception->errors())->flatten()->join("\n"))
+                ->danger()
+                ->send();
 
-        return $data;
+            throw $exception;
+        }
     }
 }

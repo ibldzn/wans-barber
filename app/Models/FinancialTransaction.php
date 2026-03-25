@@ -10,6 +10,7 @@ class FinancialTransaction extends Model
     protected $fillable = [
         'type',
         'category_id',
+        'sub_category',
         'amount',
         'payment_method_id',
         'occurred_at',

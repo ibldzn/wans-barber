@@ -3,6 +3,7 @@
 namespace App\Filament\Resources;
 
 use App\Filament\Resources\PurchaseResource\Pages;
+use App\Models\Product;
 use App\Models\Purchase;
 use Filament\Actions\CreateAction;
 use Filament\Forms\Components\DatePicker;
@@ -16,6 +17,8 @@ use Filament\Schemas\Components\Utilities\Set;
 use Filament\Schemas\Schema;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Validation\ValidationException;
 
 class PurchaseResource extends Resource
 {
@@ -52,7 +55,11 @@ class PurchaseResource extends Resource
                     ->schema([
                         Select::make('product_id')
                             ->label('Produk')
-                            ->relationship('product', 'product_name')
+                            ->relationship(
+                                'product',
+                                'product_name',
+                                modifyQueryUsing: fn (Builder $query) => static::scopePurchasableProducts($query)
+                            )
                             ->preload()
                             ->searchable()
                             ->required(),
@@ -116,5 +123,48 @@ class PurchaseResource extends Resource
             'create' => Pages\CreatePurchase::route('/create'),
             'edit' => Pages\EditPurchase::route('/{record}/edit'),
         ];
+    }
+
+    public static function validatePurchasableItems(array $items): void
+    {
+        $errors = [];
+
+        foreach ($items as $index => $item) {
+            $productId = (int) ($item['product_id'] ?? 0);
+
+            if ($productId <= 0) {
+                continue;
+            }
+
+            $product = Product::query()->find($productId);
+
+            if (! $product) {
+                $errors["items.{$index}.product_id"] = 'Produk tidak ditemukan.';
+                continue;
+            }
+
+            if (! static::isPurchasableProduct($product)) {
+                $errors["items.{$index}.product_id"] = 'Produk service atau non-stock tidak bisa dibeli lewat modul pembelian.';
+            }
+        }
+
+        if ($errors !== []) {
+            throw ValidationException::withMessages($errors);
+        }
+    }
+
+    public static function scopePurchasableProducts(Builder $query): Builder
+    {
+        return $query
+            ->where('is_active', true)
+            ->where('track_stock', true)
+            ->whereIn('product_type', ['retail', 'consumable']);
+    }
+
+    public static function isPurchasableProduct(Product $product): bool
+    {
+        return $product->is_active
+            && $product->track_stock
+            && in_array($product->product_type, ['retail', 'consumable'], true);
     }
 }

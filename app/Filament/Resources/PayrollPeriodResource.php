@@ -13,6 +13,7 @@ use Filament\Forms\Components\TextInput;
 use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
 use Filament\Schemas\Components\Section;
+use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Schema;
 use Filament\Actions\Action;
 use Filament\Tables\Columns\TextColumn;
@@ -41,9 +42,31 @@ class PayrollPeriodResource extends Resource
                         'monthly' => 'Bulanan',
                     ])
                     ->default('monthly')
+                    ->live()
+                    ->helperText(fn (Get $get): string => static::getPeriodTypeHelperText(
+                        $get('period_type'),
+                        $get('start_date'),
+                        $get('end_date'),
+                    ))
                     ->required(),
-                DatePicker::make('start_date')->label('Mulai')->required(),
-                DatePicker::make('end_date')->label('Selesai')->required(),
+                DatePicker::make('start_date')
+                    ->label('Mulai')
+                    ->live()
+                    ->helperText(fn (Get $get): string => static::getStartDateHelperText(
+                        $get('period_type'),
+                        $get('start_date'),
+                        $get('end_date'),
+                    ))
+                    ->required(),
+                DatePicker::make('end_date')
+                    ->label('Selesai')
+                    ->live()
+                    ->helperText(fn (Get $get): string => static::getEndDateHelperText(
+                        $get('period_type'),
+                        $get('start_date'),
+                        $get('end_date'),
+                    ))
+                    ->required(),
                 Select::make('status')
                     ->label('Status')
                     ->options([
@@ -99,21 +122,23 @@ class PayrollPeriodResource extends Resource
     /**
      * @param  array<string, mixed>  $data
      */
-    public static function validatePeriodRules(array $data): void
+    public static function validatePeriodRules(array $data, ?string $statePath = null): void
     {
         $periodType = (string) ($data['period_type'] ?? 'monthly');
         $startDate = Carbon::parse($data['start_date'] ?? now());
         $endDate = Carbon::parse($data['end_date'] ?? now());
+        $startField = static::qualifyFieldPath('start_date', $statePath);
+        $endField = static::qualifyFieldPath('end_date', $statePath);
 
         if ($startDate->gt($endDate)) {
             throw ValidationException::withMessages([
-                'end_date' => 'Tanggal selesai harus sama atau setelah tanggal mulai.',
+                $endField => 'Tanggal selesai harus sama atau setelah tanggal mulai.',
             ]);
         }
 
         if ($periodType === 'daily' && ! $startDate->isSameDay($endDate)) {
             throw ValidationException::withMessages([
-                'end_date' => 'Payroll harian harus menggunakan tanggal mulai dan selesai yang sama.',
+                $endField => 'Payroll harian harus menggunakan tanggal mulai dan selesai yang sama.',
             ]);
         }
 
@@ -124,10 +149,77 @@ class PayrollPeriodResource extends Resource
 
             if (! $isStartValid || ! $isEndValid) {
                 throw ValidationException::withMessages([
-                    'start_date' => 'Payroll bulanan harus mengikuti cutoff 26-25.',
-                    'end_date' => 'Payroll bulanan harus mengikuti cutoff 26-25.',
+                    $startField => 'Payroll bulanan harus mengikuti cutoff 26-25.',
+                    $endField => 'Payroll bulanan harus mengikuti cutoff 26-25.',
                 ]);
             }
         }
+    }
+
+    public static function getPeriodTypeHelperText(
+        mixed $periodType,
+        mixed $startDate = null,
+        mixed $endDate = null,
+    ): string {
+        return match ((string) ($periodType ?: 'monthly')) {
+            'daily' => 'Payroll harian wajib memakai tanggal mulai dan selesai yang sama.',
+            default => 'Payroll bulanan wajib mengikuti cutoff 26-25. ' . static::getMonthlyExampleText($startDate, $endDate),
+        };
+    }
+
+    public static function getStartDateHelperText(
+        mixed $periodType,
+        mixed $startDate = null,
+        mixed $endDate = null,
+    ): string {
+        return match ((string) ($periodType ?: 'monthly')) {
+            'daily' => 'Untuk payroll harian, isi tanggal mulai sama dengan tanggal selesai.',
+            default => 'Untuk payroll bulanan, tanggal mulai harus tanggal 26. ' . static::getMonthlyExampleText($startDate, $endDate),
+        };
+    }
+
+    public static function getEndDateHelperText(
+        mixed $periodType,
+        mixed $startDate = null,
+        mixed $endDate = null,
+    ): string {
+        return match ((string) ($periodType ?: 'monthly')) {
+            'daily' => 'Untuk payroll harian, tanggal selesai harus sama dengan tanggal mulai.',
+            default => 'Untuk payroll bulanan, tanggal selesai harus tanggal 25. ' . static::getMonthlyExampleText($startDate, $endDate),
+        };
+    }
+
+    protected static function qualifyFieldPath(string $field, ?string $statePath = null): string
+    {
+        if (blank($statePath)) {
+            return $field;
+        }
+
+        return "{$statePath}.{$field}";
+    }
+
+    protected static function getMonthlyExampleText(mixed $startDate = null, mixed $endDate = null): string
+    {
+        $exampleStart = null;
+        $exampleEnd = null;
+
+        try {
+            if (filled($endDate)) {
+                $exampleEnd = Carbon::parse($endDate);
+                $exampleStart = $exampleEnd->copy()->subMonthNoOverflow()->addDay();
+            } elseif (filled($startDate)) {
+                $exampleStart = Carbon::parse($startDate)->copy()->day(26);
+                $exampleEnd = $exampleStart->copy()->addMonthNoOverflow()->subDay();
+            }
+        } catch (\Throwable) {
+            $exampleStart = null;
+            $exampleEnd = null;
+        }
+
+        if (! $exampleStart || ! $exampleEnd) {
+            return 'Contoh: 26/02/2026 - 25/03/2026.';
+        }
+
+        return 'Contoh valid untuk periode ini: ' . $exampleStart->format('d/m/Y') . ' - ' . $exampleEnd->format('d/m/Y') . '.';
     }
 }

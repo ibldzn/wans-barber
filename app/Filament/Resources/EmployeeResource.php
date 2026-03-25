@@ -6,7 +6,6 @@ use App\Filament\Resources\EmployeeResource\Pages;
 use App\Filament\Support\HasSafeDeleteActions;
 use App\Models\Employee;
 use Filament\Actions\CreateAction;
-use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
 use Filament\Resources\Resource;
@@ -40,7 +39,7 @@ class EmployeeResource extends Resource
                     ->label('No HP')
                     ->tel()
                     ->maxLength(255),
-                Select::make('role')
+                \Filament\Forms\Components\Select::make('role')
                     ->options([
                         'admin' => 'Admin',
                         'kasir' => 'Kasir',
@@ -63,11 +62,6 @@ class EmployeeResource extends Resource
                 Toggle::make('is_active')
                     ->label('Aktif')
                     ->default(true),
-                Select::make('user_id')
-                    ->label('Akun User')
-                    ->relationship('user', 'name')
-                    ->searchable()
-                    ->preload(),
             ])
                 ->columnSpanFull()
                 ->inlineLabel()
@@ -78,11 +72,19 @@ class EmployeeResource extends Resource
     public static function table(Table $table): Table
     {
         return $table
+            ->modifyQueryUsing(fn ($query) => $query->with(['user', 'cashAdvances.payments']))
             ->columns([
                 TextColumn::make('emp_name')->label('Nama')->searchable()->sortable(),
                 TextColumn::make('role')->label('Role')->badge(),
                 TextColumn::make('emp_phone')->label('No HP'),
                 TextColumn::make('monthly_salary')->label('Gaji Bulanan')->money('IDR'),
+                TextColumn::make('user.name')->label('User Panel')->placeholder('-'),
+                TextColumn::make('outstanding_cash_advance')
+                    ->label('Kasbon Outstanding')
+                    ->state(fn (Employee $record): float => (float) $record->cashAdvances->sum(
+                        fn ($advance): float => $advance->getRemainingAmount()
+                    ))
+                    ->money('IDR'),
                 ToggleColumn::make('is_active')->label('Aktif'),
             ])
             ->headerActions([

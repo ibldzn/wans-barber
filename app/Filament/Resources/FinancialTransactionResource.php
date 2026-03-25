@@ -3,66 +3,23 @@
 namespace App\Filament\Resources;
 
 use App\Filament\Resources\FinancialTransactionResource\Pages;
-use App\Filament\Support\HasSafeDeleteActions;
 use App\Models\FinancialTransaction;
-use Filament\Actions\CreateAction;
-use Filament\Forms\Components\DateTimePicker;
-use Filament\Forms\Components\Select;
-use Filament\Forms\Components\TextInput;
+use App\Models\Payslip;
+use App\Models\Purchase;
+use App\Models\Sale;
 use Filament\Resources\Resource;
-use Filament\Schemas\Components\Section;
-use Filament\Schemas\Schema;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 
 class FinancialTransactionResource extends Resource
 {
-    use HasSafeDeleteActions;
-
     protected static ?string $model = FinancialTransaction::class;
 
     protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-banknotes';
 
     protected static string|\UnitEnum|null $navigationGroup = 'Finance';
 
-    protected static ?string $navigationLabel = 'Transaksi Keuangan';
-
-    public static function form(Schema $schema): Schema
-    {
-        return $schema->schema([
-            Section::make('Transaksi Keuangan')->schema([
-                Select::make('type')
-                    ->label('Tipe')
-                    ->options([
-                        'income' => 'Income',
-                        'expense' => 'Expense',
-                    ])
-                    ->required(),
-                Select::make('category_id')
-                    ->label('Kategori')
-                    ->relationship('category', 'name')
-                    ->searchable()
-                    ->required(),
-                TextInput::make('amount')
-                    ->label('Nominal')
-                    ->numeric()
-                    ->required(),
-                Select::make('payment_method_id')
-                    ->label('Metode Pembayaran')
-                    ->relationship('paymentMethod', 'method_name')
-                    ->searchable(),
-                DateTimePicker::make('occurred_at')
-                    ->label('Tanggal')
-                    ->default(now())
-                    ->required(),
-                TextInput::make('description')
-                    ->label('Deskripsi'),
-            ])
-                ->columnSpanFull()
-                ->inlineLabel()
-                ->columns(1),
-        ]);
-    }
+    protected static ?string $navigationLabel = 'Ledger Keuangan';
 
     public static function table(Table $table): Table
     {
@@ -70,41 +27,61 @@ class FinancialTransactionResource extends Resource
             ->columns([
                 TextColumn::make('type')->label('Tipe')->badge(),
                 TextColumn::make('category.name')->label('Kategori')->searchable(),
+                TextColumn::make('sub_category')->label('Subkategori')->placeholder('-')->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('amount')->label('Nominal')->money('IDR'),
                 TextColumn::make('paymentMethod.method_name')->label('Metode'),
+                TextColumn::make('source')
+                    ->label('Sumber')
+                    ->state(fn (FinancialTransaction $record): string => static::getReferenceLabel($record->reference_type)),
+                TextColumn::make('reference_id')
+                    ->label('Referensi')
+                    ->state(fn (FinancialTransaction $record): string => static::getReferenceCode($record))
+                    ->placeholder('-'),
                 TextColumn::make('occurred_at')->label('Tanggal')->dateTime(),
+                TextColumn::make('description')->label('Deskripsi')->wrap()->toggleable(),
             ])
-            ->headerActions([
-                CreateAction::make(),
-            ])
-            ->recordActions([
-                \Filament\Actions\EditAction::make()
-                    ->visible(fn (FinancialTransaction $record): bool => static::canEdit($record) && static::isManualEntry($record)),
-                static::makeDeleteAction(
-                    guard: fn (FinancialTransaction $record): bool => static::isManualEntry($record),
-                    guardFailureMessage: 'Transaksi otomatis dari modul lain tidak bisa dihapus.',
-                    hideWhenGuardFails: true,
-                ),
-            ])
-            ->toolbarActions([
-                static::makeDeleteBulkAction(
-                    guard: fn (FinancialTransaction $record): bool => static::isManualEntry($record),
-                    guardFailureMessage: 'Sebagian transaksi otomatis dari modul lain tidak bisa dihapus.',
-                ),
-            ]);
+            ->defaultSort('occurred_at', 'desc');
     }
 
     public static function getPages(): array
     {
         return [
             'index' => Pages\ListFinancialTransactions::route('/'),
-            'create' => Pages\CreateFinancialTransaction::route('/create'),
-            'edit' => Pages\EditFinancialTransaction::route('/{record}/edit'),
         ];
     }
 
-    protected static function isManualEntry(FinancialTransaction $record): bool
+    public static function canCreate(): bool
     {
-        return blank($record->reference_type);
+        return false;
+    }
+
+    public static function canEdit($record): bool
+    {
+        return false;
+    }
+
+    public static function canDelete($record): bool
+    {
+        return false;
+    }
+
+    protected static function getReferenceLabel(?string $referenceType): string
+    {
+        return match ($referenceType) {
+            Sale::class => 'Penjualan',
+            Purchase::class => 'Pembelian',
+            Payslip::class => 'Payroll',
+            null => 'Manual',
+            default => class_basename((string) $referenceType),
+        };
+    }
+
+    protected static function getReferenceCode(FinancialTransaction $record): string
+    {
+        if (blank($record->reference_type) || blank($record->reference_id)) {
+            return 'Manual';
+        }
+
+        return '#' . $record->reference_id;
     }
 }
