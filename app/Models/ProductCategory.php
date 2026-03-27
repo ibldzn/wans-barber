@@ -10,7 +10,6 @@ class ProductCategory extends Model
     protected $fillable = [
         'category_name',
         'category_description',
-        'category_type',
         'commission_rate_regular',
         'commission_rate_callout',
     ];

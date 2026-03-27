@@ -92,8 +92,7 @@ class StaffServiceRecapPage extends Page
 
         $serviceProductsQuery = Product::query()
             ->with(['category', 'consumables.consumableProduct'])
-            ->where('product_type', 'service')
-            ->whereHas('category', fn (Builder $query) => $query->where('category_type', 'service'));
+            ->where('product_type', 'service');
 
         if ($employee) {
             $serviceProductsQuery = $this->applyEmployeeServiceScope($serviceProductsQuery, $employee);

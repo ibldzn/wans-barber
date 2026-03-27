@@ -6,7 +6,6 @@ use App\Filament\Resources\ProductCategoryResource\Pages;
 use App\Filament\Support\HasSafeDeleteActions;
 use App\Models\ProductCategory;
 use Filament\Actions\CreateAction;
-use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Resources\Resource;
 use Filament\Schemas\Components\Section;
@@ -37,14 +36,6 @@ class ProductCategoryResource extends Resource
                 TextInput::make('category_description')
                     ->label('Deskripsi')
                     ->maxLength(255),
-                Select::make('category_type')
-                    ->label('Tipe')
-                    ->options([
-                        'service' => 'Service',
-                        'retail' => 'Retail',
-                        'consumable' => 'Consumable',
-                    ])
-                    ->required(),
                 TextInput::make('commission_rate_regular')
                     ->label('Komisi Reguler')
                     ->numeric()
@@ -67,7 +58,6 @@ class ProductCategoryResource extends Resource
         return $table
             ->columns([
                 TextColumn::make('category_name')->label('Nama')->searchable()->sortable(),
-                TextColumn::make('category_type')->label('Tipe')->badge(),
                 TextColumn::make('commission_rate_regular')->label('Komisi Reguler')->formatStateUsing(fn($state) => number_format($state * 100, 0) . '%'),
                 TextColumn::make('commission_rate_callout')->label('Komisi Panggilan')->formatStateUsing(fn($state) => number_format($state * 100, 0) . '%'),
             ])

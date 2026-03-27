@@ -2,6 +2,7 @@
 
 namespace App\Filament\Pages;
 
+use App\Filament\Resources\SaleResource;
 use App\Models\Employee;
 use App\Models\PaymentMethod;
 use App\Models\Product;
@@ -184,7 +185,7 @@ class PosPage extends Page
             ->success()
             ->send();
 
-        $this->mount();
+        $this->redirect(SaleResource::getUrl('view', ['record' => $sale]), navigate: true);
     }
 
     protected function resolveUnitPriceForForm(?string $productId, string $priceTier): float

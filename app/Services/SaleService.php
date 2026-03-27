@@ -12,6 +12,7 @@ use App\Models\SaleItem;
 use App\Models\User;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Carbon;
+use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
@@ -54,61 +55,73 @@ class SaleService
             ? Carbon::parse(Arr::get($data, 'paid_at'))
             : now();
 
-        return DB::transaction(function () use ($data, $preparedItems, $cashierId, $paymentMethodId, $paidAt, $user): Sale {
-            $subtotal = 0;
-            $serviceTotal = 0;
-            $retailTotal = 0;
+        $maxAttempts = 5;
 
-            foreach ($preparedItems as $prepared) {
-                $lineTotal = (float) $prepared['line_total'];
+        for ($attempt = 1; $attempt <= $maxAttempts; $attempt++) {
+            try {
+                return DB::transaction(function () use ($data, $preparedItems, $cashierId, $paymentMethodId, $paidAt, $user): Sale {
+                    $subtotal = 0;
+                    $serviceTotal = 0;
+                    $retailTotal = 0;
 
-                $subtotal += $lineTotal;
+                    foreach ($preparedItems as $prepared) {
+                        $lineTotal = (float) $prepared['line_total'];
 
-                if ($prepared['product']->product_type === 'service') {
-                    $serviceTotal += $lineTotal;
-                } else {
-                    $retailTotal += $lineTotal;
+                        $subtotal += $lineTotal;
+
+                        if ($prepared['product']->product_type === 'service') {
+                            $serviceTotal += $lineTotal;
+                        } else {
+                            $retailTotal += $lineTotal;
+                        }
+                    }
+
+                    $discount = (float) ($data['discount'] ?? 0);
+                    $total = $subtotal - $discount;
+
+                    $sale = Sale::create([
+                        'invoice_no' => $this->generateInvoiceNo($paidAt),
+                        'cashier_id' => $cashierId,
+                        'customer_name' => $data['customer_name'] ?? null,
+                        'customer_phone' => $data['customer_phone'] ?? null,
+                        'payment_method_id' => $paymentMethodId,
+                        'subtotal' => $subtotal,
+                        'discount' => $discount,
+                        'total' => $total,
+                        'paid_at' => $paidAt,
+                        'notes' => $data['notes'] ?? null,
+                        'created_by' => $user->id,
+                    ]);
+
+                    foreach ($preparedItems as $prepared) {
+                        SaleItem::create([
+                            'sale_id' => $sale->id,
+                            'product_id' => $prepared['product']->id,
+                            'employee_id' => $prepared['employee_id'],
+                            'qty' => $prepared['qty'],
+                            'unit_price' => $prepared['unit_price'],
+                            'price_tier' => $prepared['price_tier'],
+                            'line_total' => $prepared['line_total'],
+                            'commission_rate' => $prepared['commission_rate'],
+                            'commission_amount' => $prepared['commission_amount'],
+                            'notes' => $prepared['notes'],
+                        ]);
+
+                        $this->handleInventoryForItem($sale, $prepared['product'], $prepared['qty'], $paidAt);
+                    }
+
+                    $this->createIncomeTransactions($sale, $serviceTotal, $retailTotal);
+
+                    return $sale;
+                });
+            } catch (QueryException $exception) {
+                if ($attempt < $maxAttempts && $this->isInvoiceCollision($exception)) {
+                    continue;
                 }
+
+                throw $exception;
             }
-
-            $discount = (float) ($data['discount'] ?? 0);
-            $total = $subtotal - $discount;
-
-            $sale = Sale::create([
-                'invoice_no' => $this->generateInvoiceNo(),
-                'cashier_id' => $cashierId,
-                'customer_name' => $data['customer_name'] ?? null,
-                'customer_phone' => $data['customer_phone'] ?? null,
-                'payment_method_id' => $paymentMethodId,
-                'subtotal' => $subtotal,
-                'discount' => $discount,
-                'total' => $total,
-                'paid_at' => $paidAt,
-                'notes' => $data['notes'] ?? null,
-                'created_by' => $user->id,
-            ]);
-
-            foreach ($preparedItems as $prepared) {
-                SaleItem::create([
-                    'sale_id' => $sale->id,
-                    'product_id' => $prepared['product']->id,
-                    'employee_id' => $prepared['employee_id'],
-                    'qty' => $prepared['qty'],
-                    'unit_price' => $prepared['unit_price'],
-                    'price_tier' => $prepared['price_tier'],
-                    'line_total' => $prepared['line_total'],
-                    'commission_rate' => $prepared['commission_rate'],
-                    'commission_amount' => $prepared['commission_amount'],
-                    'notes' => $prepared['notes'],
-                ]);
-
-                $this->handleInventoryForItem($sale, $prepared['product'], $prepared['qty'], $paidAt);
-            }
-
-            $this->createIncomeTransactions($sale, $serviceTotal, $retailTotal);
-
-            return $sale;
-        });
+        }
     }
 
     /**
@@ -370,15 +383,37 @@ class SaleService
         }
     }
 
-    protected function generateInvoiceNo(): string
+    protected function generateInvoiceNo(Carbon $paidAt): string
     {
-        $datePart = now()->format('Ymd');
+        $datePart = $paidAt->format('Ymd');
+        $prefix = "INV-{$datePart}-";
 
-        do {
-            $random = str_pad((string) random_int(1, 9999), 4, '0', STR_PAD_LEFT);
-            $invoiceNo = "INV-{$datePart}-{$random}";
-        } while (Sale::where('invoice_no', $invoiceNo)->exists());
+        $lastInvoiceNo = Sale::query()
+            ->where('invoice_no', 'like', "{$prefix}%")
+            ->orderByDesc('invoice_no')
+            ->value('invoice_no');
 
-        return $invoiceNo;
+        $nextNumber = 1;
+
+        if (is_string($lastInvoiceNo) && preg_match('/^' . preg_quote($prefix, '/') . '(\d+)$/', $lastInvoiceNo, $matches)) {
+            $nextNumber = ((int) $matches[1]) + 1;
+        }
+
+        return sprintf('%s%04d', $prefix, $nextNumber);
+    }
+
+    protected function isInvoiceCollision(QueryException $exception): bool
+    {
+        $sqlState = $exception->errorInfo[0] ?? null;
+        $driverCode = $exception->errorInfo[1] ?? null;
+        $message = strtolower($exception->getMessage());
+
+        if (! in_array($sqlState, ['23000', '23505'], true)) {
+            return false;
+        }
+
+        return $driverCode === 1062
+            || str_contains($message, 'invoice_no')
+            || str_contains($message, 'sales_invoice_no_unique');
     }
 }

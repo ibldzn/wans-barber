@@ -15,22 +15,18 @@ class ProductSeeder extends Seeder
     {
         $categories = [
             'Barbershop' => [
-                'category_type' => 'service',
                 'commission_rate_regular' => 0.40,
                 'commission_rate_callout' => 0.40,
             ],
             'Reflexology' => [
-                'category_type' => 'service',
                 'commission_rate_regular' => 0.50,
                 'commission_rate_callout' => 0.50,
             ],
             'Retail' => [
-                'category_type' => 'retail',
                 'commission_rate_regular' => 0.00,
                 'commission_rate_callout' => 0.00,
             ],
             'Consumable' => [
-                'category_type' => 'consumable',
                 'commission_rate_regular' => 0.00,
                 'commission_rate_callout' => 0.00,
             ],
@@ -65,7 +61,6 @@ class ProductSeeder extends Seeder
                 ['category_name' => $name],
                 [
                     'category_description' => null,
-                    'category_type' => $meta['category_type'],
                     'commission_rate_regular' => $meta['commission_rate_regular'],
                     'commission_rate_callout' => $meta['commission_rate_callout'],
                 ]

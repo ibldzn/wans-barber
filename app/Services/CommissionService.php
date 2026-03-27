@@ -11,6 +11,10 @@ class CommissionService
     {
         unset($employee);
 
+        if ($product->product_type !== 'service') {
+            return 0.0;
+        }
+
         $tier = $priceTier === 'callout' ? 'callout' : 'regular';
 
         $category = $product->category;
