@@ -69,7 +69,11 @@ class PosPage extends Page
                 Section::make('Transaksi')->schema([
                     Select::make('cashier_id')
                         ->label('Kasir')
-                        ->options(fn() => Employee::where('is_active', true)->pluck('emp_name', 'id'))
+                        ->options(
+                            fn() => Employee::where('is_active', true)
+                                ->where('role', 'kasir')
+                                ->pluck('emp_name', 'id')
+                        )
                         ->searchable()
                         ->required(),
                     Select::make('payment_method_id')
@@ -123,9 +127,9 @@ class PosPage extends Page
                                 ->label('Produk')
                                 ->options(fn() => Product::where('is_active', true)->pluck('product_name', 'id'))
                                 ->searchable()
-                                ->disabled(fn (Get $get): bool => $this->isLockedLine($get))
+                                ->disabled(fn(Get $get): bool => $this->isLockedLine($get))
                                 ->live()
-                                ->required(fn (Get $get): bool => ! $this->isLockedLine($get))
+                                ->required(fn(Get $get): bool => ! $this->isLockedLine($get))
                                 ->afterStateUpdated(function (Set $set, Get $get, ?string $state): void {
                                     $priceTier = (string) ($get('price_tier') ?? 'regular');
                                     $set('unit_price', $this->resolveUnitPriceForForm($state, $priceTier));
@@ -133,7 +137,7 @@ class PosPage extends Page
                             Select::make('employee_id')
                                 ->label('Pegawai')
                                 ->options(fn() => Employee::where('is_active', true)->pluck('emp_name', 'id'))
-                                ->disabled(fn (Get $get): bool => $this->isLockedLine($get))
+                                ->disabled(fn(Get $get): bool => $this->isLockedLine($get))
                                 ->searchable(),
                             Select::make('price_tier')
                                 ->label('Harga')
@@ -142,7 +146,7 @@ class PosPage extends Page
                                     'callout' => 'Panggilan',
                                 ])
                                 ->default('regular')
-                                ->disabled(fn (Get $get): bool => $this->isLockedLine($get))
+                                ->disabled(fn(Get $get): bool => $this->isLockedLine($get))
                                 ->live()
                                 ->afterStateUpdated(function (Set $set, Get $get): void {
                                     $productId = $get('product_id');
@@ -152,10 +156,10 @@ class PosPage extends Page
                             TextInput::make('qty')
                                 ->label('Qty')
                                 ->numeric()
-                                ->disabled(fn (Get $get): bool => $this->isLockedLine($get))
+                                ->disabled(fn(Get $get): bool => $this->isLockedLine($get))
                                 ->live()
                                 ->default(1)
-                                ->required(fn (Get $get): bool => ! $this->isLockedLine($get)),
+                                ->required(fn(Get $get): bool => ! $this->isLockedLine($get)),
                             TextInput::make('unit_price')
                                 ->label('Harga Satuan')
                                 ->numeric()
@@ -163,7 +167,7 @@ class PosPage extends Page
                                 ->dehydrated(),
                             TextInput::make('notes')
                                 ->label('Catatan')
-                                ->disabled(fn (Get $get): bool => $this->isLockedLine($get)),
+                                ->disabled(fn(Get $get): bool => $this->isLockedLine($get)),
                         ])
                         ->columns(6)
                         ->defaultItems(1)
@@ -389,8 +393,8 @@ class PosPage extends Page
     {
         $productIds = collect($manualItems)
             ->pluck('product_id')
-            ->map(fn ($id) => (int) $id)
-            ->filter(fn (int $id): bool => $id > 0)
+            ->map(fn($id) => (int) $id)
+            ->filter(fn(int $id): bool => $id > 0)
             ->unique()
             ->values();
 
