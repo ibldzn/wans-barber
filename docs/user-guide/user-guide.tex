@@ -1,0 +1,1258 @@
+\documentclass[12pt,a4paper]{article}
+
+\usepackage[a4paper,margin=2.3cm]{geometry}
+\usepackage{graphicx}
+\usepackage{float}
+\usepackage{hyperref}
+\usepackage{longtable}
+\usepackage{enumitem}
+\usepackage{caption}
+\usepackage{array}
+\usepackage{booktabs}
+
+\graphicspath{{img/}}
+\hypersetup{
+    hidelinks,
+    pdftitle={User Guide Aplikasi Kasir WAN's Barber},
+    pdfauthor={Codex},
+}
+
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{0.6em}
+\setlist[enumerate]{leftmargin=*, itemsep=0.3em}
+\setlist[itemize]{leftmargin=*, itemsep=0.3em}
+
+\newcolumntype{L}[1]{>{\raggedright\arraybackslash}p{#1}}
+\providecommand{\textrightarrow}{\ensuremath{\rightarrow}}
+
+\newcommand{\GuideFigure}[3][0.96]{
+\begin{figure}[H]
+\centering
+\includegraphics[width=#1\textwidth]{#2}
+\caption{#3}
+\end{figure}
+}
+
+\newcommand{\FieldTableStart}{
+\begin{longtable}{L{0.30\textwidth}L{0.64\textwidth}}
+\toprule
+\textbf{Field / Tombol} & \textbf{Penjelasan} \\
+\midrule
+\endhead
+}
+
+\newcommand{\FieldTableEnd}{
+\bottomrule
+\end{longtable}
+}
+
+\newcommand{\FieldRow}[2]{
+\textbf{#1} & #2 \\
+}
+
+\begin{document}
+
+\begin{titlepage}
+    \centering
+    \vspace*{2cm}
+    {\LARGE \textbf{User Guide Aplikasi Kasir WAN's Barber}\par}
+    \vspace{0.8cm}
+    {\large Dokumentasi Pengguna Lengkap Berbasis Observasi Aplikasi Lokal\par}
+    \vspace{1.5cm}
+    {\large URL aplikasi: \url{http://localhost:8000/kasir}\par}
+    \vspace{0.5cm}
+    {\large Tanggal verifikasi UI: 28 Maret 2026\par}
+    \vspace{0.5cm}
+    {\large Format output: LaTeX siap compile menjadi PDF\par}
+    \vfill
+    \begin{tabular}{ll}
+        Nama dokumen & : User Guide Aplikasi Kasir \\
+        Nama aplikasi & : WAN's Barber \\
+        Lingkungan uji & : Lokal / localhost \\
+        Penyusun & : Codex \\
+    \end{tabular}
+    \vfill
+    {\large 2026\par}
+\end{titlepage}
+
+\section*{Kata Pengantar}
+Dokumen ini disusun sebagai panduan pengguna untuk aplikasi kasir WAN's Barber yang berjalan pada lingkungan lokal Laravel + Filament. Isi dokumen dibuat berdasarkan observasi nyata terhadap antarmuka aplikasi di \url{http://localhost:8000/kasir}, bukan berdasarkan dugaan nama file atau nama class semata.
+
+Seluruh screenshot diambil setelah halaman stabil, tabel sudah tampil, form sudah terbuka penuh, dan elemen penting sudah tidak bergerak. Selama pengujian digunakan data dummy yang aman dan mudah dikenali, terutama data yang diawali dengan teks \texttt{UG}. Dengan pendekatan ini, pembaca dapat mengikuti panduan langkah demi langkah sesuai tampilan yang benar-benar ada di aplikasi.
+
+\tableofcontents
+\clearpage
+
+\section{Pendahuluan}
+\subsection{Tujuan Dokumen}
+Dokumen ini bertujuan untuk:
+\begin{enumerate}
+    \item menjelaskan fungsi setiap menu dan fitur yang tersedia di aplikasi;
+    \item membantu pengguna pemula menjalankan aplikasi tanpa perlu memahami istilah teknis yang rumit;
+    \item memberikan langkah penggunaan yang jelas, runtut, dan mudah diikuti;
+    \item mendokumentasikan hasil observasi nyata dari aplikasi yang sedang berjalan.
+\end{enumerate}
+
+\subsection{Siapa yang Menggunakan Aplikasi}
+Aplikasi ini cocok digunakan oleh:
+\begin{itemize}
+    \item admin yang mengelola data master, pengguna, kategori, stok, dan payroll;
+    \item kasir yang menjalankan transaksi penjualan, melihat laporan, dan mencatat pengeluaran harian;
+    \item pengelola usaha yang ingin memantau penjualan, pengeluaran, stok, dan rekap operasional;
+    \item petugas dokumentasi internal yang ingin menyimpan informasi operasional pada menu Dokumentasi.
+\end{itemize}
+
+\subsection{Gambaran Umum Aplikasi}
+Secara umum, aplikasi ini menggabungkan beberapa fungsi penting dalam satu panel:
+\begin{itemize}
+    \item \textbf{POS} untuk membuat transaksi penjualan;
+    \item \textbf{Master Data} untuk mengelola pegawai, produk, supplier, kategori, dan metode pembayaran;
+    \item \textbf{Inventory} untuk pembelian, konsumsi bahan, penyesuaian stok, dan log pergerakan stok;
+    \item \textbf{Finance} untuk pengeluaran operasional, transaksi manual, dan ledger keuangan;
+    \item \textbf{Payroll} untuk absensi, kasbon pegawai, periode payroll, dan slip gaji;
+    \item \textbf{Reports} untuk rekap pembayaran, pendapatan vs pengeluaran, dan rekap per petugas;
+    \item \textbf{Administration} dan \textbf{Filament Shield} untuk pengelolaan user dan hak akses;
+    \item \textbf{Dokumentasi} untuk menyimpan informasi operasional internal.
+\end{itemize}
+
+\section{Persiapan Sebelum Menggunakan Aplikasi}
+\subsection{Cara Akses}
+\begin{enumerate}
+    \item Buka browser pada komputer yang terhubung ke lingkungan lokal aplikasi.
+    \item Ketik alamat \url{http://localhost:8000/kasir}.
+    \item Tunggu sampai halaman login tampil penuh.
+\end{enumerate}
+
+\subsection{Login}
+Pada pengujian lokal ini, login dilakukan menggunakan akun berikut:
+\begin{itemize}
+    \item Email: \texttt{it@it.com}
+    \item Password: \texttt{password}
+\end{itemize}
+
+Langkah login:
+\begin{enumerate}
+    \item Buka halaman login.
+    \item Klik kotak \textbf{Email address}, lalu ketik email.
+    \item Klik kotak \textbf{Password}, lalu ketik password.
+    \item Centang \textbf{Remember me} bila ingin browser mengingat sesi login.
+    \item Klik tombol \textbf{Sign in}.
+    \item Jika berhasil, sistem akan membuka dashboard panel kasir.
+\end{enumerate}
+
+\FieldTableStart
+\FieldRow{Email address}{Kolom untuk memasukkan alamat email akun pengguna.}
+\FieldRow{Password}{Kolom untuk memasukkan password akun.}
+\FieldRow{Remember me}{Opsional. Digunakan agar sesi login tetap diingat oleh browser.}
+\FieldRow{Sign in}{Tombol untuk masuk ke aplikasi.}
+\FieldTableEnd
+
+\textbf{Hasil yang diharapkan.} Setelah login berhasil, pengguna masuk ke halaman Dashboard.
+
+\textbf{Kesalahan yang mungkin terjadi.}
+\begin{itemize}
+    \item Jika email atau password kosong, login tidak dilanjutkan.
+    \item Jika kombinasi email dan password salah, pengguna tetap berada di halaman login.
+\end{itemize}
+
+\GuideFigure{login-page.png}{Halaman login aplikasi}
+\GuideFigure{login-validation-empty.png}{Contoh halaman login saat tombol masuk ditekan tanpa mengisi kredensial}
+
+\subsection{Layout Umum Aplikasi}
+Setelah login, tampilan utama aplikasi terdiri dari beberapa bagian:
+\begin{itemize}
+    \item \textbf{Sidebar kiri} berisi menu utama dan submenu.
+    \item \textbf{Topbar} berisi pencarian global dan menu pengguna.
+    \item \textbf{Area kerja utama} berisi tabel, form, laporan, widget, atau halaman detail.
+    \item \textbf{Breadcrumb} di bagian atas area kerja membantu pengguna mengetahui posisi halaman saat ini.
+    \item \textbf{Tombol aksi} biasanya berada di kanan atas atau bawah form, misalnya \texttt{Create}, \texttt{Save}, \texttt{Cancel}, \texttt{Delete}, atau aksi khusus lain.
+\end{itemize}
+
+Perilaku umum yang perlu diketahui:
+\begin{itemize}
+    \item banyak halaman create akan berpindah ke halaman edit setelah data tersimpan;
+    \item beberapa tombol delete menampilkan modal konfirmasi sebelum data benar-benar dihapus;
+    \item beberapa data master yang sudah dipakai transaksi tidak bisa dihapus, dan pengguna disarankan menonaktifkan data tersebut;
+    \item menu yang tampil dapat berbeda sesuai role akun.
+\end{itemize}
+
+\GuideFigure{dashboard.png}{Contoh layout umum aplikasi setelah login}
+
+\section{Penjelasan Menu Utama}
+\FieldTableStart
+\FieldRow{Dashboard}{Ringkasan operasional harian, trend cashflow, stok menipis, dan kasbon outstanding.}
+\FieldRow{Payroll}{Berisi Absensi Harian, Absensi Pegawai, Pembayaran Kasbon, Kasbon Pegawai, Periode Payroll, dan Slip Gaji.}
+\FieldRow{POS}{Berisi POS Kasir dan daftar Penjualan.}
+\FieldRow{Reports}{Berisi Rekap Metode Pembayaran, Pendapatan vs Pengeluaran, dan Rekap Per Petugas.}
+\FieldRow{Filament Shield}{Berisi pengaturan role dan permission panel.}
+\FieldRow{Finance}{Berisi Pengeluaran Operasional, Ledger Keuangan, dan Transaksi Manual.}
+\FieldRow{Master Data}{Berisi Pegawai, Kategori Keuangan, Metode Pembayaran, Kategori Produk, Produk, dan Supplier.}
+\FieldRow{Inventory}{Berisi Log Pergerakan Stok, Konsumsi Bahan, Pembelian, dan Penyesuaian Stok.}
+\FieldRow{Administration}{Berisi menu Users.}
+\FieldRow{Dokumentasi}{Berisi halaman Dokumentasi dan Item Dokumentasi.}
+\FieldTableEnd
+
+\section{Penjelasan Fitur per Menu}
+
+\subsection{Dashboard}
+\textbf{Tujuan.} Dashboard menampilkan ringkasan cepat kondisi usaha pada hari ini.
+
+\textbf{Letak.} Sidebar kiri \textrightarrow{} \textbf{Dashboard}.
+
+\textbf{Bagian yang ditampilkan pada dashboard.}
+\begin{itemize}
+    \item \textbf{Kinerja Operasional Hari Ini}: menampilkan Gross Income, Total Expense, Net Profit, dan Jumlah Penjualan.
+    \item \textbf{Trend Cashflow}: grafik perbandingan income dan expense, dengan pilihan filter 14 hari atau 30 hari.
+    \item \textbf{Low Stock}: daftar produk aktif yang stoknya sudah menyentuh reorder level.
+    \item \textbf{Kasbon Outstanding}: daftar kasbon pegawai yang belum lunas.
+\end{itemize}
+
+\textbf{Kapan dipakai.} Gunakan dashboard saat pertama kali login untuk melihat kondisi operasional terbaru tanpa harus membuka banyak menu.
+
+\textbf{Langkah penggunaan.}
+\begin{enumerate}
+    \item Login ke aplikasi.
+    \item Setelah berhasil masuk, sistem otomatis membuka dashboard.
+    \item Baca kartu statistik di bagian atas.
+    \item Periksa grafik cashflow untuk melihat tren pemasukan dan pengeluaran.
+    \item Periksa tabel stok menipis dan kasbon outstanding bila perlu tindak lanjut.
+\end{enumerate}
+
+\textbf{Catatan penting.}
+\begin{itemize}
+    \item Data pada widget statistik harian memakai rentang hari ini.
+    \item Grafik cashflow diperbarui berkala.
+    \item Tabel stok menipis hanya relevan untuk produk yang menggunakan pelacakan stok dan memiliki reorder level.
+\end{itemize}
+
+\GuideFigure{dashboard.png}{Dashboard aplikasi}
+
+\subsection{Payroll}
+
+\subsubsection*{Absensi Harian}
+\textbf{Tujuan.} Mencatat kehadiran seluruh pegawai aktif dalam satu halaman sekaligus.
+
+\textbf{Letak.} Sidebar \textrightarrow{} \textbf{Payroll} \textrightarrow{} \textbf{Absensi Harian}.
+
+\textbf{Kapan dipakai.} Gunakan fitur ini setiap hari ketika pengguna ingin mengisi absensi massal dengan cepat.
+
+\textbf{Langkah penggunaan.}
+\begin{enumerate}
+    \item Buka menu \textbf{Absensi Harian}.
+    \item Pada kolom \textbf{Tanggal}, pilih tanggal absensi yang ingin diisi.
+    \item Tunggu sampai daftar pegawai aktif muncul otomatis.
+    \item Untuk mempercepat pengisian, gunakan tombol \textbf{Set All Hadir} atau \textbf{Set All Tidak Hadir}.
+    \item Bila ada pegawai yang statusnya berbeda, ubah manual pada baris pegawai tersebut.
+    \item Isi \textbf{Catatan} bila perlu.
+    \item Klik tombol \textbf{Simpan}.
+\end{enumerate}
+
+\FieldTableStart
+\FieldRow{Tanggal}{Tanggal absensi yang sedang diisi. Saat tanggal diubah, daftar pegawai di-refresh sesuai data pada tanggal tersebut.}
+\FieldRow{Daftar Pegawai}{Baris otomatis untuk semua pegawai aktif.}
+\FieldRow{Pegawai}{Nama pegawai. Kolom ini tampil sebagai informasi dan tidak diubah dari halaman ini.}
+\FieldRow{Status}{Pilihan \texttt{Hadir} atau \texttt{Tidak Hadir}.}
+\FieldRow{Catatan}{Keterangan tambahan untuk pegawai tertentu, misalnya izin, sakit, atau informasi lain.}
+\FieldRow{Set All Hadir}{Mengisi semua baris menjadi status hadir.}
+\FieldRow{Set All Tidak Hadir}{Mengisi semua baris menjadi status tidak hadir.}
+\FieldRow{Simpan}{Menyimpan seluruh baris absensi untuk tanggal yang dipilih.}
+\FieldTableEnd
+
+\textbf{Hasil yang diharapkan.} Sistem menampilkan notifikasi bahwa absensi berhasil tersimpan, beserta jumlah data yang dibuat dan diperbarui. Pada pengujian lokal, absensi hari ini tersimpan untuk 4 pegawai aktif.
+
+\textbf{Kesalahan yang mungkin terjadi.}
+\begin{itemize}
+    \item Bila tidak ada pegawai aktif, sistem menampilkan peringatan bahwa tidak ada pegawai aktif.
+    \item Bila pengguna lupa memilih status tertentu, penyimpanan tidak boleh dilanjutkan sampai semua data wajib terisi.
+\end{itemize}
+
+\GuideFigure{menu-daily-attendance-page.png}{Halaman Absensi Harian sebelum penyimpanan}
+\GuideFigure{menu-daily-attendance-saved.png}{Halaman Absensi Harian sesudah tombol Simpan dijalankan}
+
+\subsubsection*{Absensi Pegawai}
+\textbf{Tujuan.} Melihat, menambah, mengedit, atau menghapus absensi per baris.
+
+\textbf{Letak.} Sidebar \textrightarrow{} \textbf{Payroll} \textrightarrow{} \textbf{Absensi Pegawai}.
+
+\textbf{Kapan dipakai.} Gunakan fitur ini bila ingin memperbaiki satu data absensi tertentu atau menambah absensi secara manual.
+
+\textbf{Kolom daftar.}
+\FieldTableStart
+\FieldRow{Pegawai}{Nama pegawai pada data absensi.}
+\FieldRow{Tanggal}{Tanggal absensi.}
+\FieldRow{Status}{Status hadir atau tidak hadir.}
+\FieldRow{Create}{Membuka form absensi baru.}
+\FieldRow{Edit}{Membuka form edit pada baris yang dipilih.}
+\FieldRow{Delete}{Menghapus data absensi dengan konfirmasi.}
+\FieldTableEnd
+
+\textbf{Form input.}
+\FieldTableStart
+\FieldRow{Pegawai}{Nama pegawai yang absensinya ingin dicatat.}
+\FieldRow{Tanggal}{Tanggal absensi.}
+\FieldRow{Status}{Pilih \texttt{Hadir} atau \texttt{Tidak Hadir}.}
+\FieldRow{Catatan}{Catatan tambahan jika diperlukan.}
+\FieldTableEnd
+
+\textbf{Langkah penggunaan.}
+\begin{enumerate}
+    \item Buka menu \textbf{Absensi Pegawai}.
+    \item Klik tombol \textbf{Create} di kanan atas bila ingin menambah data.
+    \item Isi pegawai, tanggal, status, dan catatan.
+    \item Klik \textbf{Create}.
+    \item Bila hanya ingin memperbaiki data yang sudah ada, klik \textbf{Edit} pada baris yang sesuai.
+\end{enumerate}
+
+\textbf{Catatan penting.}
+\begin{itemize}
+    \item Menu ini cocok untuk koreksi data satu per satu.
+    \item Jika absensi sudah dimasukkan dari halaman \textbf{Absensi Harian}, data juga akan muncul di sini.
+\end{itemize}
+
+\GuideFigure{menu-employee-attendances-index-populated.png}{Daftar Absensi Pegawai setelah absensi harian disimpan}
+\GuideFigure{menu-employee-attendances-create.png}{Form tambah absensi pegawai}
+
+\subsubsection*{Kasbon Pegawai}
+\textbf{Tujuan.} Mencatat pinjaman atau kasbon pegawai beserta sisa pembayarannya.
+
+\textbf{Letak.} Sidebar \textrightarrow{} \textbf{Payroll} \textrightarrow{} \textbf{Kasbon Pegawai}.
+
+\textbf{Kapan dipakai.} Gunakan saat pegawai menerima pinjaman dari perusahaan.
+
+\textbf{Kolom daftar dan filter.}
+\FieldTableStart
+\FieldRow{Pegawai}{Nama pegawai pemilik kasbon.}
+\FieldRow{Nominal}{Total nilai kasbon.}
+\FieldRow{Sudah Dibayar}{Akumulasi pembayaran kasbon yang sudah masuk.}
+\FieldRow{Sisa Kasbon}{Sisa nilai kasbon yang belum dibayar.}
+\FieldRow{Cicilan}{Nominal cicilan default sebagai referensi internal.}
+\FieldRow{Tanggal}{Tanggal kasbon dibuat.}
+\FieldRow{Status}{Status \texttt{Open} atau \texttt{Settled}.}
+\FieldRow{Filter Pegawai}{Menyaring daftar berdasarkan pegawai tertentu.}
+\FieldRow{Filter Status}{Menyaring daftar berdasarkan status open atau settled.}
+\FieldTableEnd
+
+\textbf{Form input.}
+\FieldTableStart
+\FieldRow{Pegawai}{Pegawai yang menerima kasbon.}
+\FieldRow{Nominal}{Nilai kasbon yang diberikan.}
+\FieldRow{Cicilan Default}{Nominal cicilan referensi. Payroll tidak memotong otomatis dari sini.}
+\FieldRow{Tanggal}{Tanggal pemberian kasbon.}
+\FieldRow{Deskripsi}{Keterangan tujuan kasbon.}
+\FieldRow{Status}{Biasanya dimulai dari \texttt{Open}.}
+\FieldTableEnd
+
+\textbf{Contoh penggunaan.} Pada pengujian lokal dibuat data kasbon untuk \texttt{Andi Barber} dengan nominal \texttt{Rp 500.000} dan cicilan default \texttt{Rp 150.000}.
+
+\textbf{Langkah penggunaan.}
+\begin{enumerate}
+    \item Buka \textbf{Kasbon Pegawai}.
+    \item Klik \textbf{Create}.
+    \item Pilih pegawai.
+    \item Isi nominal kasbon.
+    \item Isi cicilan default bila ingin ada acuan nominal pembayaran.
+    \item Isi tanggal dan deskripsi.
+    \item Klik \textbf{Create}.
+    \item Gunakan panel filter bila daftar kasbon sudah banyak.
+\end{enumerate}
+
+\textbf{Tips agar tidak salah.}
+\begin{itemize}
+    \item Isi deskripsi dengan alasan kasbon, misalnya kasbon kebutuhan pribadi atau kasbon operasional pegawai.
+    \item Status \texttt{Settled} sebaiknya dipakai hanya jika sisa kasbon benar-benar sudah nol.
+\end{itemize}
+
+\GuideFigure{menu-cash-advances-index.png}{Daftar Kasbon Pegawai}
+\GuideFigure{menu-cash-advances-create.png}{Form tambah kasbon pegawai}
+\GuideFigure{menu-cash-advances-filter-panel.png}{Contoh panel filter pada Kasbon Pegawai}
+\GuideFigure{menu-cash-advances-created.png}{Contoh data kasbon yang sudah berhasil disimpan}
+
+\subsubsection*{Pembayaran Kasbon}
+\textbf{Tujuan.} Mencatat cicilan atau pelunasan kasbon pegawai.
+
+\textbf{Letak.} Sidebar \textrightarrow{} \textbf{Payroll} \textrightarrow{} \textbf{Pembayaran Kasbon}.
+
+\textbf{Kapan dipakai.} Gunakan saat pegawai membayar sebagian atau seluruh sisa kasbon.
+
+\textbf{Kolom daftar.}
+\FieldTableStart
+\FieldRow{Pegawai}{Nama pegawai pemilik kasbon.}
+\FieldRow{Kasbon}{Nominal kasbon asal.}
+\FieldRow{Bayar}{Nominal pembayaran pada baris tersebut.}
+\FieldRow{Periode}{Periode payroll yang dikaitkan, bila dipilih.}
+\FieldRow{Tanggal}{Tanggal pembayaran.}
+\FieldTableEnd
+
+\textbf{Form input.}
+\FieldTableStart
+\FieldRow{Kasbon}{Hanya menampilkan kasbon dengan status masih \texttt{Open}.}
+\FieldRow{Sisa Kasbon}{Informasi otomatis mengenai sisa nominal yang masih harus dibayar.}
+\FieldRow{Periode Payroll}{Opsional. Dapat dihubungkan ke periode payroll yang sedang berjalan.}
+\FieldRow{Nominal}{Nominal pembayaran. Harus lebih besar dari 0 dan tidak boleh melebihi sisa kasbon.}
+\FieldRow{Tanggal}{Tanggal pembayaran.}
+\FieldRow{Deskripsi}{Catatan tambahan untuk pembayaran tersebut.}
+\FieldTableEnd
+
+\textbf{Langkah penggunaan.}
+\begin{enumerate}
+    \item Buka \textbf{Pembayaran Kasbon}.
+    \item Klik \textbf{Create}.
+    \item Pilih data kasbon yang masih terbuka.
+    \item Baca nilai \textbf{Sisa Kasbon}.
+    \item Isi nominal pembayaran.
+    \item Pilih periode payroll bila pembayaran ingin dikaitkan ke periode tertentu.
+    \item Isi tanggal dan deskripsi.
+    \item Klik \textbf{Create}.
+\end{enumerate}
+
+\textbf{Kesalahan yang mungkin terjadi.}
+\begin{itemize}
+    \item Jika nominal pembayaran lebih besar dari sisa kasbon, sistem menolak penyimpanan.
+    \item Jika nominal pembayaran sama dengan nol atau kurang dari nol, sistem menolak penyimpanan.
+    \item Jika kasbon sudah lunas, kasbon tersebut tidak layak lagi dipilih untuk pembayaran baru.
+\end{itemize}
+
+\GuideFigure{menu-cash-advance-payments-index.png}{Daftar Pembayaran Kasbon}
+\GuideFigure{menu-cash-advance-payments-create.png}{Form tambah pembayaran kasbon}
+\GuideFigure{menu-cash-advance-payments-created.png}{Contoh pembayaran kasbon yang berhasil disimpan}
+
+\subsubsection*{Periode Payroll}
+\textbf{Tujuan.} Menentukan rentang waktu payroll dan menghasilkan slip gaji berdasarkan periode tersebut.
+
+\textbf{Letak.} Sidebar \textrightarrow{} \textbf{Payroll} \textrightarrow{} \textbf{Periode Payroll}.
+
+\textbf{Kapan dipakai.} Gunakan sebelum membuat slip gaji. Tanpa periode payroll, slip gaji tidak bisa digenerate dengan rapi.
+
+\textbf{Kolom daftar.}
+\FieldTableStart
+\FieldRow{Nama}{Nama periode payroll.}
+\FieldRow{Tipe}{Jenis payroll, yaitu harian atau bulanan.}
+\FieldRow{Mulai}{Tanggal awal periode.}
+\FieldRow{Selesai}{Tanggal akhir periode.}
+\FieldRow{Status}{Status periode, misalnya \texttt{Open} atau \texttt{Closed}.}
+\FieldRow{Generate Payslips}{Aksi untuk membuat slip gaji untuk periode yang dipilih.}
+\FieldTableEnd
+
+\textbf{Form input.}
+\FieldTableStart
+\FieldRow{Nama}{Nama periode payroll, misalnya \texttt{Payroll Harian 28 Maret 2026}.}
+\FieldRow{Tipe Payroll}{Pilihan \texttt{Harian} atau \texttt{Bulanan}.}
+\FieldRow{Mulai}{Tanggal mulai periode.}
+\FieldRow{Selesai}{Tanggal selesai periode.}
+\FieldRow{Status}{Status periode payroll.}
+\FieldTableEnd
+
+\textbf{Aturan penting.}
+\begin{itemize}
+    \item Payroll \textbf{harian} wajib memakai tanggal mulai dan tanggal selesai yang sama.
+    \item Payroll \textbf{bulanan} wajib mengikuti cutoff tanggal \textbf{26 sampai 25}.
+    \item Tanggal selesai tidak boleh lebih awal dari tanggal mulai.
+\end{itemize}
+
+\textbf{Langkah penggunaan.}
+\begin{enumerate}
+    \item Buka menu \textbf{Periode Payroll}.
+    \item Klik \textbf{Create}.
+    \item Isi nama periode payroll.
+    \item Pilih tipe payroll.
+    \item Isi tanggal mulai dan tanggal selesai sesuai aturan.
+    \item Klik \textbf{Create}.
+    \item Setelah data muncul di tabel, klik aksi \textbf{Generate Payslips}.
+    \item Pada modal konfirmasi, klik tombol konfirmasi untuk melanjutkan.
+\end{enumerate}
+
+\textbf{Contoh penggunaan.} Pada pengujian lokal dibuat periode \texttt{UG Payroll Harian 28 Maret 2026}, kemudian aksi \texttt{Generate Payslips} menghasilkan 2 slip gaji.
+
+\GuideFigure{menu-payroll-periods-index.png}{Daftar Periode Payroll}
+\GuideFigure{menu-payroll-periods-create.png}{Form tambah periode payroll}
+\GuideFigure{menu-payroll-periods-created.png}{Contoh periode payroll yang telah disimpan}
+\GuideFigure{menu-payroll-periods-generate-modal.png}{Modal konfirmasi Generate Payslips}
+\GuideFigure{menu-payroll-periods-generated.png}{Daftar periode payroll setelah slip gaji digenerate}
+
+\subsubsection*{Slip Gaji}
+\textbf{Tujuan.} Melihat hasil slip gaji per pegawai, mencetak PDF, dan menandai slip sebagai sudah dibayar.
+
+\textbf{Letak.} Sidebar \textrightarrow{} \textbf{Payroll} \textrightarrow{} \textbf{Slip Gaji}.
+
+\textbf{Kolom daftar.}
+\FieldTableStart
+\FieldRow{Pegawai}{Nama pegawai pemilik slip gaji.}
+\FieldRow{Periode}{Periode payroll asal slip gaji.}
+\FieldRow{Tipe}{Jenis payroll periode terkait.}
+\FieldRow{Total Pinjaman}{Nilai total pinjaman sebelum pembayaran.}
+\FieldRow{Nominal Cicilan}{Nilai cicilan kasbon pada slip.}
+\FieldRow{Sisa Pinjaman}{Nilai pinjaman setelah pembayaran.}
+\FieldRow{Total Dibayar}{Nilai bersih yang dibayarkan.}
+\FieldRow{Paid At}{Waktu pembayaran, bila sudah ditandai lunas.}
+\FieldRow{PDF}{Aksi untuk membuka atau mengunduh slip gaji PDF.}
+\FieldRow{Mark Paid}{Aksi untuk menandai slip gaji sebagai sudah dibayar.}
+\FieldTableEnd
+
+\textbf{Langkah penggunaan.}
+\begin{enumerate}
+    \item Buka menu \textbf{Slip Gaji}.
+    \item Cari pegawai atau periode yang diinginkan.
+    \item Klik \textbf{PDF} bila ingin membuka atau mengunduh slip gaji.
+    \item Klik \textbf{Mark Paid} bila pembayaran sudah benar-benar dilakukan.
+    \item Konfirmasikan aksi pada modal yang muncul.
+\end{enumerate}
+
+\textbf{Catatan verifikasi.}
+\begin{itemize}
+    \item Aksi \textbf{Mark Paid} berhasil diverifikasi pada pengujian lokal.
+    \item Aksi \textbf{PDF} terdeteksi dan memicu proses file PDF. Namun tampilan pembaca PDF di browser tidak diverifikasi penuh karena pada pengujian lokal aksi tersebut memicu unduhan file.
+\end{itemize}
+
+\GuideFigure{menu-payslips-index.png}{Daftar Slip Gaji}
+\GuideFigure{menu-payslips-index-populated.png}{Daftar Slip Gaji setelah generate payslips}
+\GuideFigure{menu-payslips-mark-paid-modal.png}{Modal konfirmasi Mark Paid}
+\GuideFigure{menu-payslips-mark-paid-done.png}{Daftar Slip Gaji setelah salah satu slip ditandai dibayar}
+
+\subsection{POS}
+
+\subsubsection*{POS Kasir}
+\textbf{Tujuan.} Membuat transaksi penjualan dari meja kasir.
+
+\textbf{Letak.} Sidebar \textrightarrow{} \textbf{POS} \textrightarrow{} \textbf{POS Kasir}.
+
+\textbf{Kapan dipakai.} Gunakan setiap kali ada transaksi penjualan layanan atau produk.
+
+\textbf{Bagian transaksi utama.}
+\FieldTableStart
+\FieldRow{Kasir}{Pegawai yang bertugas sebagai kasir pada transaksi tersebut.}
+\FieldRow{Metode Pembayaran}{Metode pembayaran, misalnya Cash, QRIS, Transfer, atau EDC.}
+\FieldRow{Nama Customer}{Nama pelanggan. Opsional, tetapi disarankan diisi untuk dokumentasi transaksi.}
+\FieldRow{No HP}{Nomor telepon pelanggan. Opsional.}
+\FieldRow{Diskon}{Nominal potongan harga.}
+\FieldRow{Tanggal}{Tanggal dan jam transaksi.}
+\FieldRow{Catatan}{Catatan tambahan untuk transaksi.}
+\FieldTableEnd
+
+\textbf{Bagian item transaksi.}
+\FieldTableStart
+\FieldRow{Produk}{Produk jasa, retail, atau consumable yang dijual.}
+\FieldRow{Pegawai}{Pegawai pelaksana, terutama penting untuk produk jasa.}
+\FieldRow{Harga}{Pilihan \texttt{Reguler} atau \texttt{Panggilan}.}
+\FieldRow{Qty}{Jumlah item.}
+\FieldRow{Harga Satuan}{Harga otomatis berdasarkan produk dan pilihan tier harga.}
+\FieldRow{Catatan}{Catatan tambahan per item.}
+\FieldRow{Tambah Item}{Menambah baris item baru.}
+\FieldTableEnd
+
+\textbf{Perilaku khusus yang berhasil diamati.}
+\begin{itemize}
+    \item Jika pengguna memilih produk bertipe jasa yang memiliki mapping konsumsi bahan, sistem akan menambahkan baris \textbf{auto consumable} secara otomatis.
+    \item Baris auto consumable bersifat terkunci dan tidak ditujukan untuk diubah manual.
+    \item Harga satuan mengikuti tier harga yang dipilih, yaitu reguler atau panggilan.
+\end{itemize}
+
+\textbf{Langkah penggunaan.}
+\begin{enumerate}
+    \item Buka \textbf{POS Kasir}.
+    \item Pilih \textbf{Kasir}.
+    \item Pilih \textbf{Metode Pembayaran}.
+    \item Isi nama customer dan nomor HP bila diperlukan.
+    \item Isi diskon jika ada.
+    \item Pada bagian \textbf{Items}, pilih produk.
+    \item Pilih pegawai pelaksana bila item tersebut adalah jasa.
+    \item Pilih tier harga yang sesuai.
+    \item Atur jumlah item.
+    \item Tambahkan item lain jika transaksi terdiri dari beberapa produk.
+    \item Klik tombol \textbf{Simpan Transaksi}.
+\end{enumerate}
+
+\textbf{Contoh penggunaan.} Pada pengujian lokal dibuat transaksi untuk customer \texttt{UG Pelanggan POS} dengan item \texttt{Haircut Dewasa}. Sistem otomatis menambahkan item consumable \texttt{Handuk Sekali Pakai}.
+
+\textbf{Hasil yang diharapkan.} Sistem menampilkan notifikasi \texttt{Transaksi berhasil}, lalu membuka halaman detail penjualan.
+
+\GuideFigure{menu-pos-page.png}{Halaman POS Kasir}
+\GuideFigure{menu-pos-auto-consumable.png}{Contoh baris auto consumable pada POS}
+\GuideFigure{menu-pos-transaction-success.png}{Halaman detail sesaat setelah transaksi berhasil disimpan}
+
+\subsubsection*{Penjualan}
+\textbf{Tujuan.} Melihat daftar penjualan yang sudah terjadi dan membuka detailnya.
+
+\textbf{Letak.} Sidebar \textrightarrow{} \textbf{POS} \textrightarrow{} \textbf{Penjualan}.
+
+\textbf{Kolom daftar.}
+\FieldTableStart
+\FieldRow{Invoice}{Nomor invoice penjualan.}
+\FieldRow{Kasir}{Nama kasir pada transaksi.}
+\FieldRow{Metode}{Metode pembayaran yang dipakai.}
+\FieldRow{Total}{Nilai total transaksi.}
+\FieldRow{Tanggal}{Tanggal dan jam transaksi.}
+\FieldRow{Detail}{Membuka halaman detail penjualan.}
+\FieldRow{Print 58mm}{Membuka halaman struk thermal lebar 58 mm.}
+\FieldRow{ESC/POS RAW}{Menghasilkan keluaran raw untuk printer ESC/POS.}
+\FieldTableEnd
+
+\textbf{Halaman detail penjualan menampilkan:}
+\begin{itemize}
+    \item informasi invoice;
+    \item tanggal transaksi;
+    \item nama kasir;
+    \item metode pembayaran;
+    \item nama dan nomor HP customer;
+    \item tabel item penjualan;
+    \item ringkasan subtotal, diskon, total, dan catatan.
+\end{itemize}
+
+\textbf{Catatan verifikasi.}
+\begin{itemize}
+    \item Aksi \textbf{Detail} berhasil diverifikasi.
+    \item Aksi \textbf{Print 58mm} berhasil diverifikasi dan halaman struk thermal berhasil dibuka.
+    \item Aksi \textbf{ESC/POS RAW} terdeteksi pada UI, tetapi isi raw output tidak diperiksa penuh pada pengujian ini.
+\end{itemize}
+
+\GuideFigure{menu-sales-index.png}{Daftar Penjualan}
+\GuideFigure{menu-sales-view.png}{Halaman detail penjualan}
+\GuideFigure{menu-sales-print-thermal.png}{Contoh halaman print thermal 58 mm}
+
+\subsection{Reports}
+
+\subsubsection*{Rekap Metode Pembayaran}
+\textbf{Tujuan.} Menampilkan total penjualan yang dikelompokkan berdasarkan metode pembayaran pada rentang tanggal tertentu.
+
+\textbf{Letak.} Sidebar \textrightarrow{} \textbf{Reports} \textrightarrow{} \textbf{Rekap Metode Pembayaran}.
+
+\FieldTableStart
+\FieldRow{Mulai}{Tanggal awal laporan.}
+\FieldRow{Selesai}{Tanggal akhir laporan.}
+\FieldTableEnd
+
+\textbf{Langkah penggunaan.}
+\begin{enumerate}
+    \item Buka \textbf{Rekap Metode Pembayaran}.
+    \item Tentukan tanggal mulai dan tanggal selesai.
+    \item Tunggu area laporan diperbarui.
+    \item Baca total per tanggal dan total per metode pembayaran.
+\end{enumerate}
+
+\textbf{Kapan dipakai.} Laporan ini berguna untuk membandingkan komposisi pembayaran Cash, QRIS, Transfer, atau EDC.
+
+\GuideFigure{menu-payment-recap-page.png}{Laporan Rekap Metode Pembayaran}
+
+\subsubsection*{Pendapatan vs Pengeluaran}
+\textbf{Tujuan.} Membandingkan total pemasukan dan total pengeluaran pada rentang waktu tertentu.
+
+\textbf{Letak.} Sidebar \textrightarrow{} \textbf{Reports} \textrightarrow{} \textbf{Pendapatan vs Pengeluaran}.
+
+\FieldTableStart
+\FieldRow{Mulai}{Tanggal awal laporan.}
+\FieldRow{Selesai}{Tanggal akhir laporan.}
+\FieldTableEnd
+
+\textbf{Isi laporan.}
+\begin{itemize}
+    \item total pendapatan;
+    \item total pengeluaran;
+    \item laba bersih;
+    \item rincian harian;
+    \item rincian kategori pendapatan;
+    \item rincian kategori pengeluaran.
+\end{itemize}
+
+\textbf{Catatan penting.}
+\begin{itemize}
+    \item Tanggal selesai tidak boleh lebih awal dari tanggal mulai.
+    \item Data diambil dari ledger transaksi keuangan.
+\end{itemize}
+
+\GuideFigure{menu-profit-loss-page.png}{Laporan Pendapatan vs Pengeluaran}
+
+\subsubsection*{Rekap Per Petugas}
+\textbf{Tujuan.} Melihat performa penjualan jasa per petugas.
+
+\textbf{Letak.} Sidebar \textrightarrow{} \textbf{Reports} \textrightarrow{} \textbf{Rekap Per Petugas}.
+
+\FieldTableStart
+\FieldRow{Petugas}{Filter petugas aktif dengan role barber atau reflexology.}
+\FieldRow{Mulai}{Tanggal awal rekap.}
+\FieldRow{Selesai}{Tanggal akhir rekap.}
+\FieldTableEnd
+
+\textbf{Isi laporan.}
+\begin{itemize}
+    \item daftar jasa per produk;
+    \item jumlah terjual;
+    \item total omzet;
+    \item komisi petugas;
+    \item bagian barber atau petugas;
+    \item biaya consumable;
+    \item ringkasan per kategori.
+\end{itemize}
+
+\textbf{Catatan penting.}
+\begin{itemize}
+    \item Jika belum memilih petugas, halaman tetap bisa dibuka tetapi data rekap belum fokus ke satu orang.
+    \item Laporan ini paling berguna saat memilih petugas tertentu dan rentang tanggal yang jelas.
+\end{itemize}
+
+\GuideFigure{menu-staff-service-recap-page.png}{Laporan Rekap Per Petugas}
+
+\subsection{Finance}
+
+\subsubsection*{Pengeluaran Operasional}
+\textbf{Tujuan.} Mencatat pengeluaran harian yang dibayar dengan metode \texttt{Cash}.
+
+\textbf{Letak.} Sidebar \textrightarrow{} \textbf{Finance} \textrightarrow{} \textbf{Pengeluaran Operasional}.
+
+\textbf{Karakteristik khusus.}
+\begin{itemize}
+    \item Tipe transaksi dikunci sebagai \texttt{expense}.
+    \item Metode pembayaran dikunci ke \texttt{Cash}.
+    \item Hanya kategori keuangan bertipe expense yang bisa dipilih.
+\end{itemize}
+
+\FieldTableStart
+\FieldRow{Kategori Pengeluaran}{Kategori expense, misalnya Operasional atau Utilities.}
+\FieldRow{Subkategori}{Opsional. Contoh: token listrik, PAM, internet, ATK.}
+\FieldRow{Metode Pembayaran}{Selalu \texttt{Cash (otomatis)}.}
+\FieldRow{Nominal}{Nilai pengeluaran.}
+\FieldRow{Tanggal}{Tanggal dan jam pengeluaran.}
+\FieldRow{Deskripsi}{Keterangan pengeluaran.}
+\FieldTableEnd
+
+\textbf{Langkah penggunaan.}
+\begin{enumerate}
+    \item Buka \textbf{Pengeluaran Operasional}.
+    \item Klik \textbf{Create}.
+    \item Pilih kategori pengeluaran.
+    \item Isi subkategori bila dibutuhkan.
+    \item Isi nominal.
+    \item Isi tanggal.
+    \item Isi deskripsi.
+    \item Klik \textbf{Create}.
+\end{enumerate}
+
+\textbf{Contoh penggunaan.} Pada pengujian lokal dicatat pengeluaran operasional kategori \texttt{Operasional}, subkategori \texttt{ATK QA}, nominal \texttt{Rp 75.000}.
+
+\GuideFigure{menu-cash-expenses-index.png}{Daftar Pengeluaran Operasional}
+\GuideFigure{menu-cash-expenses-create.png}{Form tambah pengeluaran operasional}
+\GuideFigure{menu-cash-expenses-created.png}{Contoh pengeluaran operasional yang berhasil disimpan}
+
+\subsubsection*{Ledger Keuangan}
+\textbf{Tujuan.} Menampilkan semua transaksi keuangan secara read-only, baik transaksi manual maupun transaksi yang terbentuk dari modul lain.
+
+\textbf{Letak.} Sidebar \textrightarrow{} \textbf{Finance} \textrightarrow{} \textbf{Ledger Keuangan}.
+
+\textbf{Kolom daftar.}
+\FieldTableStart
+\FieldRow{Tipe}{Income atau Expense.}
+\FieldRow{Kategori}{Kategori keuangan dari transaksi.}
+\FieldRow{Subkategori}{Subkategori bila ada.}
+\FieldRow{Nominal}{Nilai transaksi.}
+\FieldRow{Metode}{Metode pembayaran.}
+\FieldRow{Sumber}{Asal transaksi, misalnya Penjualan, Pembelian, Payroll, atau Manual.}
+\FieldRow{Referensi}{Kode referensi transaksi.}
+\FieldRow{Tanggal}{Tanggal dan jam transaksi.}
+\FieldRow{Deskripsi}{Catatan deskriptif.}
+\FieldTableEnd
+
+\textbf{Catatan penting.}
+\begin{itemize}
+    \item Halaman ini tidak menyediakan create, edit, atau delete.
+    \item Ledger digunakan untuk audit dan penelusuran asal transaksi.
+\end{itemize}
+
+\GuideFigure{menu-financial-transactions-index.png}{Ledger Keuangan}
+
+\subsubsection*{Transaksi Manual}
+\textbf{Tujuan.} Mencatat transaksi keuangan manual yang tidak berasal langsung dari modul penjualan, pembelian, atau payroll.
+
+\textbf{Letak.} Sidebar \textrightarrow{} \textbf{Finance} \textrightarrow{} \textbf{Transaksi Manual}.
+
+\FieldTableStart
+\FieldRow{Tipe}{Pilih \texttt{Income} atau \texttt{Expense}.}
+\FieldRow{Kategori}{Kategori yang sesuai dengan tipe transaksi.}
+\FieldRow{Subkategori}{Keterangan kategori yang lebih rinci.}
+\FieldRow{Nominal}{Nominal transaksi.}
+\FieldRow{Metode Pembayaran}{Metode pembayaran yang digunakan.}
+\FieldRow{Tanggal}{Tanggal dan jam transaksi.}
+\FieldRow{Deskripsi}{Penjelasan transaksi manual.}
+\FieldTableEnd
+
+\textbf{Langkah penggunaan.}
+\begin{enumerate}
+    \item Buka \textbf{Transaksi Manual}.
+    \item Klik \textbf{Create}.
+    \item Pilih tipe transaksi.
+    \item Pilih kategori yang sesuai.
+    \item Isi subkategori bila dibutuhkan.
+    \item Isi nominal, metode pembayaran, tanggal, dan deskripsi.
+    \item Klik \textbf{Create}.
+\end{enumerate}
+
+\textbf{Contoh penggunaan.} Pada pengujian lokal berhasil dibuat transaksi manual expense kategori \texttt{Operasional}, subkategori \texttt{ATK QA}, nominal \texttt{Rp 125.000}, metode \texttt{Cash}.
+
+\GuideFigure{menu-manual-finance-entries-index.png}{Daftar Transaksi Manual}
+\GuideFigure{menu-manual-finance-entries-create.png}{Form tambah transaksi manual}
+\GuideFigure{menu-manual-finance-entries-created.png}{Contoh transaksi manual yang berhasil disimpan}
+
+\subsection{Master Data}
+
+\subsubsection*{Pegawai}
+\textbf{Tujuan.} Menyimpan identitas pegawai dan data yang diperlukan untuk operasional dan payroll.
+
+\textbf{Letak.} Sidebar \textrightarrow{} \textbf{Master Data} \textrightarrow{} \textbf{Pegawai}.
+
+\FieldTableStart
+\FieldRow{Nama}{Nama pegawai.}
+\FieldRow{No HP}{Nomor telepon pegawai.}
+\FieldRow{Role}{Pilihan role seperti Admin, Kasir, Barber, Reflexology, atau OB.}
+\FieldRow{No Rekening}{Nomor rekening pegawai.}
+\FieldRow{Gaji Bulanan}{Gaji bulanan tetap.}
+\FieldRow{Uang Makan Harian}{Nominal uang makan per hari.}
+\FieldRow{Aktif}{Status aktif atau tidak aktif.}
+\FieldRow{User Panel}{Nama user panel yang terhubung ke pegawai, bila ada.}
+\FieldRow{Kasbon Outstanding}{Akumulasi sisa kasbon pegawai.}
+\FieldTableEnd
+
+\textbf{Kapan dipakai.} Gunakan saat menambah pegawai baru, memperbarui data pegawai, atau menonaktifkan pegawai lama.
+
+\textbf{Tips.}
+\begin{itemize}
+    \item Pastikan role pegawai sesuai pekerjaan sebenarnya karena data ini memengaruhi laporan dan payroll.
+    \item Bila pegawai berhenti, lebih aman menonaktifkan data daripada menghapusnya.
+\end{itemize}
+
+\GuideFigure{menu-employees-index.png}{Daftar Pegawai}
+\GuideFigure{menu-employees-create.png}{Form tambah pegawai}
+\GuideFigure{menu-employees-edit.png}{Form edit pegawai}
+
+\subsubsection*{Kategori Keuangan}
+\textbf{Tujuan.} Mengelompokkan transaksi income dan expense agar laporan lebih rapi.
+
+\textbf{Letak.} Sidebar \textrightarrow{} \textbf{Master Data} \textrightarrow{} \textbf{Kategori Keuangan}.
+
+\FieldTableStart
+\FieldRow{Nama}{Nama kategori keuangan.}
+\FieldRow{Tipe}{Pilih \texttt{Income} atau \texttt{Expense}.}
+\FieldRow{System}{Menandai kategori bawaan sistem.}
+\FieldRow{Deskripsi}{Keterangan tambahan kategori.}
+\FieldTableEnd
+
+\textbf{Catatan penting.}
+\begin{itemize}
+    \item Kategori bertanda system atau kategori yang sudah dipakai transaksi tidak bisa dihapus.
+    \item Jika delete gagal, pengguna sebaiknya tetap memakai kategori tersebut atau mengganti struktur transaksi dengan hati-hati.
+\end{itemize}
+
+\GuideFigure{menu-finance-categories-index.png}{Daftar Kategori Keuangan}
+\GuideFigure{menu-finance-categories-create.png}{Form tambah kategori keuangan}
+\GuideFigure{menu-finance-categories-edit.png}{Form edit kategori keuangan}
+
+\subsubsection*{Metode Pembayaran}
+\textbf{Tujuan.} Menyimpan daftar metode pembayaran yang bisa dipakai pada transaksi.
+
+\textbf{Letak.} Sidebar \textrightarrow{} \textbf{Master Data} \textrightarrow{} \textbf{Metode Pembayaran}.
+
+\FieldTableStart
+\FieldRow{Nama}{Nama metode pembayaran, misalnya Cash, QRIS, Transfer, atau EDC.}
+\FieldRow{Deskripsi}{Keterangan tambahan metode pembayaran.}
+\FieldRow{Aktif}{Menentukan apakah metode pembayaran masih dapat dipakai.}
+\FieldTableEnd
+
+\GuideFigure{menu-payment-methods-index.png}{Daftar Metode Pembayaran}
+\GuideFigure{menu-payment-methods-create.png}{Form tambah metode pembayaran}
+\GuideFigure{menu-payment-methods-edit.png}{Form edit metode pembayaran}
+
+\subsubsection*{Kategori Produk}
+\textbf{Tujuan.} Mengelompokkan produk dan menyimpan aturan komisi dasar.
+
+\textbf{Letak.} Sidebar \textrightarrow{} \textbf{Master Data} \textrightarrow{} \textbf{Kategori Produk}.
+
+\FieldTableStart
+\FieldRow{Nama}{Nama kategori produk.}
+\FieldRow{Deskripsi}{Keterangan kategori.}
+\FieldRow{Komisi Reguler}{Nilai komisi untuk harga reguler, diisi sebagai desimal antara 0 dan 1. Contoh: 0.25 berarti 25\%.}
+\FieldRow{Komisi Panggilan}{Nilai komisi untuk harga panggilan, juga diisi sebagai desimal antara 0 dan 1.}
+\FieldTableEnd
+
+\GuideFigure{menu-product-categories-index.png}{Daftar Kategori Produk}
+\GuideFigure{menu-product-categories-create.png}{Form tambah kategori produk}
+\GuideFigure{menu-product-categories-edit.png}{Form edit kategori produk}
+
+\subsubsection*{Produk}
+\textbf{Tujuan.} Menyimpan produk jasa, produk retail, dan produk consumable.
+
+\textbf{Letak.} Sidebar \textrightarrow{} \textbf{Master Data} \textrightarrow{} \textbf{Produk}.
+
+\FieldTableStart
+\FieldRow{Kategori}{Kategori produk.}
+\FieldRow{Nama}{Nama produk.}
+\FieldRow{Deskripsi}{Keterangan produk.}
+\FieldRow{Tipe}{Pilihan \texttt{Service}, \texttt{Retail}, atau \texttt{Consumable}.}
+\FieldRow{Harga Reguler}{Harga normal produk.}
+\FieldRow{Harga Panggilan}{Harga khusus layanan panggilan bila ada.}
+\FieldRow{Track Stok}{Menentukan apakah stok produk dipantau sistem.}
+\FieldRow{Harga Modal}{Biaya modal dasar produk.}
+\FieldRow{Reorder Level}{Batas stok minimum untuk peringatan stok menipis.}
+\FieldRow{Aktif}{Status aktif produk.}
+\FieldRow{Stok}{Kolom daftar yang dihitung dari log pergerakan stok.}
+\FieldTableEnd
+
+\textbf{Catatan penting.}
+\begin{itemize}
+    \item Produk jasa biasanya tidak memakai track stok.
+    \item Produk retail dan consumable yang track stok aktif akan memengaruhi modul inventory.
+    \item Nilai stok pada tabel dihitung dari pembelian, pengeluaran stok, dan penyesuaian stok.
+\end{itemize}
+
+\GuideFigure{menu-products-index.png}{Daftar Produk}
+\GuideFigure{menu-products-create.png}{Form tambah produk}
+\GuideFigure{menu-products-edit.png}{Form edit produk}
+
+\subsubsection*{Supplier}
+\textbf{Tujuan.} Menyimpan data pemasok barang.
+
+\textbf{Letak.} Sidebar \textrightarrow{} \textbf{Master Data} \textrightarrow{} \textbf{Supplier}.
+
+\FieldTableStart
+\FieldRow{Nama}{Nama supplier.}
+\FieldRow{No HP}{Nomor telepon supplier.}
+\FieldRow{Alamat}{Alamat supplier.}
+\FieldRow{Catatan}{Keterangan tambahan supplier.}
+\FieldRow{Aktif}{Status aktif supplier.}
+\FieldTableEnd
+
+\textbf{Langkah penggunaan.}
+\begin{enumerate}
+    \item Buka \textbf{Supplier}.
+    \item Klik \textbf{Create}.
+    \item Isi data supplier.
+    \item Klik \textbf{Create}.
+    \item Untuk memperbarui data, gunakan \textbf{Edit}.
+    \item Untuk menghapus data, klik \textbf{Delete} lalu konfirmasikan.
+\end{enumerate}
+
+\textbf{Catatan penting.}
+\begin{itemize}
+    \item Jika supplier sudah dipakai transaksi, delete dapat ditolak. Dalam kondisi ini, lebih aman ubah status menjadi tidak aktif.
+    \item Pada pengujian lokal, modal delete dan notifikasi delete berhasil diverifikasi.
+\end{itemize}
+
+\GuideFigure{menu-suppliers-index.png}{Daftar Supplier}
+\GuideFigure{menu-suppliers-create.png}{Form tambah supplier}
+\GuideFigure{menu-suppliers-edit.png}{Form edit supplier}
+\GuideFigure{menu-suppliers-delete-modal.png}{Modal konfirmasi delete supplier}
+\GuideFigure{menu-suppliers-deleted-notification.png}{Contoh tampilan setelah supplier dummy dihapus}
+
+\subsection{Inventory}
+
+\subsubsection*{Log Pergerakan Stok}
+\textbf{Tujuan.} Menampilkan semua pergerakan stok dari pembelian, penjualan, dan penyesuaian manual.
+
+\textbf{Letak.} Sidebar \textrightarrow{} \textbf{Inventory} \textrightarrow{} \textbf{Log Pergerakan Stok}.
+
+\FieldTableStart
+\FieldRow{Produk}{Nama produk yang stoknya berubah.}
+\FieldRow{Tipe}{Jenis perubahan, misalnya \texttt{in}, \texttt{out}, atau \texttt{adjustment}.}
+\FieldRow{Qty}{Jumlah perubahan stok.}
+\FieldRow{Harga Modal}{Nilai modal per unit bila tersedia.}
+\FieldRow{Sumber}{Asal transaksi, misalnya Penjualan, Pembelian, atau Adjustment Manual.}
+\FieldRow{Referensi}{ID atau kode referensi sumber transaksi.}
+\FieldRow{Tanggal}{Waktu pergerakan stok dicatat.}
+\FieldRow{Catatan}{Catatan tambahan.}
+\FieldTableEnd
+
+\textbf{Catatan penting.} Halaman ini hanya untuk melihat data, bukan untuk mengubah data secara langsung.
+
+\GuideFigure{menu-inventory-movements-index.png}{Log Pergerakan Stok}
+
+\subsubsection*{Konsumsi Bahan}
+\textbf{Tujuan.} Menentukan bahan consumable apa saja yang otomatis dipakai saat suatu jasa dijual.
+
+\textbf{Letak.} Sidebar \textrightarrow{} \textbf{Inventory} \textrightarrow{} \textbf{Konsumsi Bahan}.
+
+\FieldTableStart
+\FieldRow{Produk Jasa}{Produk layanan, misalnya Haircut Dewasa.}
+\FieldRow{Produk Consumable}{Bahan habis pakai yang terkait, misalnya Handuk Sekali Pakai.}
+\FieldRow{Qty per Jasa}{Jumlah bahan yang terpakai setiap satu jasa terjual.}
+\FieldTableEnd
+
+\textbf{Kapan dipakai.} Fitur ini dipakai saat admin ingin agar stok consumable berkurang otomatis ketika jasa tertentu dijual.
+
+\GuideFigure{menu-product-consumables-index.png}{Daftar Konsumsi Bahan}
+\GuideFigure{menu-product-consumables-create.png}{Form tambah mapping konsumsi bahan}
+\GuideFigure{menu-product-consumables-edit.png}{Form edit mapping konsumsi bahan}
+
+\subsubsection*{Pembelian}
+\textbf{Tujuan.} Mencatat pembelian barang dari supplier dan menambah stok produk yang dibeli.
+
+\textbf{Letak.} Sidebar \textrightarrow{} \textbf{Inventory} \textrightarrow{} \textbf{Pembelian}.
+
+\textbf{Catatan penting sebelum input.}
+\begin{itemize}
+    \item Produk yang bisa dipilih hanya produk aktif, track stok aktif, dan bertipe \texttt{retail} atau \texttt{consumable}.
+    \item Produk jasa tidak bisa dibeli melalui modul ini.
+\end{itemize}
+
+\FieldTableStart
+\FieldRow{Supplier}{Supplier barang yang dibeli.}
+\FieldRow{Tanggal}{Tanggal pembelian.}
+\FieldRow{Catatan}{Keterangan pembelian.}
+\FieldRow{Produk}{Produk yang dibeli.}
+\FieldRow{Qty}{Jumlah item yang dibeli.}
+\FieldRow{Harga Satuan}{Harga beli per unit.}
+\FieldRow{Subtotal}{Hasil kali qty dan harga satuan. Sistem menghitung otomatis.}
+\FieldRow{Tambah Item}{Menambah baris item pembelian.}
+\FieldTableEnd
+
+\textbf{Langkah penggunaan.}
+\begin{enumerate}
+    \item Buka menu \textbf{Pembelian}.
+    \item Klik \textbf{Create}.
+    \item Pilih supplier.
+    \item Pastikan tanggal pembelian benar.
+    \item Isi catatan bila perlu.
+    \item Pilih produk yang dibeli.
+    \item Isi qty dan harga satuan.
+    \item Jika membeli beberapa produk, klik \textbf{Tambah Item}.
+    \item Klik \textbf{Create}.
+\end{enumerate}
+
+\textbf{Contoh penggunaan.} Pada pengujian lokal dibuat pembelian \texttt{Handuk Sekali Pakai} sebanyak 12 unit dengan harga satuan \texttt{Rp 3.500}. Setelah tersimpan, sistem membuat log pergerakan stok masuk.
+
+\GuideFigure{menu-purchases-index.png}{Daftar Pembelian}
+\GuideFigure{menu-purchases-create.png}{Form tambah pembelian}
+\GuideFigure{menu-purchases-created.png}{Contoh pembelian yang berhasil disimpan}
+\GuideFigure{menu-purchases-edit.png}{Halaman edit pembelian}
+
+\subsubsection*{Penyesuaian Stok}
+\textbf{Tujuan.} Menambah atau mengurangi stok secara manual di luar transaksi pembelian dan penjualan.
+
+\textbf{Letak.} Sidebar \textrightarrow{} \textbf{Inventory} \textrightarrow{} \textbf{Penyesuaian Stok}.
+
+\FieldTableStart
+\FieldRow{Produk}{Produk yang stoknya akan disesuaikan.}
+\FieldRow{Qty Adjustment}{Isi angka positif untuk menambah stok, atau angka negatif untuk mengurangi stok. Nilai nol tidak diperbolehkan.}
+\FieldRow{Harga Modal}{Harga modal yang terkait dengan penyesuaian bila diperlukan.}
+\FieldRow{Tanggal}{Tanggal dan jam penyesuaian.}
+\FieldRow{Catatan}{Alasan penyesuaian stok.}
+\FieldTableEnd
+
+\textbf{Kapan dipakai.} Gunakan saat ada stok fisik yang berbeda dengan catatan sistem, misalnya karena barang rusak, barang hilang, atau stok tambahan manual.
+
+\GuideFigure{menu-stock-adjustments-index.png}{Daftar Penyesuaian Stok}
+\GuideFigure{menu-stock-adjustments-create.png}{Form tambah penyesuaian stok}
+\GuideFigure{menu-stock-adjustments-created.png}{Contoh penyesuaian stok yang berhasil disimpan}
+
+\subsection{Administration}
+
+\subsubsection*{Users}
+\textbf{Tujuan.} Mengelola akun yang dapat masuk ke panel aplikasi.
+
+\textbf{Letak.} Sidebar \textrightarrow{} \textbf{Administration} \textrightarrow{} \textbf{Users}.
+
+\FieldTableStart
+\FieldRow{Nama}{Nama user panel.}
+\FieldRow{Email}{Email login user. Harus unik.}
+\FieldRow{Password}{Password user. Wajib diisi saat create.}
+\FieldRow{Role Panel}{Pilihan role panel, yaitu \texttt{Super Admin}, \texttt{Admin}, atau \texttt{Kasir}.}
+\FieldRow{Pegawai Terkait}{Opsional. Satu pegawai hanya boleh terhubung ke satu user.}
+\FieldTableEnd
+
+\textbf{Daftar user menampilkan:}
+\begin{itemize}
+    \item nama;
+    \item email;
+    \item role;
+    \item pegawai yang terhubung;
+    \item waktu dibuat dan waktu diubah.
+\end{itemize}
+
+\textbf{Catatan verifikasi yang sangat penting.} Pada pengujian lokal tanggal 28 Maret 2026, submit form create user \textbf{menyimpan record user baru} tetapi kemudian halaman berakhir dengan error server. Log lokal menunjukkan error \texttt{Call to undefined method App\textbackslash Models\textbackslash User::getDefaultGuardName()}. Artinya, menu \textbf{Users} berhasil dibuka dan formnya terlihat lengkap, tetapi alur create user \textbf{belum stabil} pada build lokal yang diuji.
+
+\textbf{Saran operasional.}
+\begin{itemize}
+    \item Gunakan menu ini dengan hati-hati sampai bug create user diperbaiki.
+    \item Bila hanya ingin meninjau daftar user, halaman index dapat dipakai dengan normal.
+\end{itemize}
+
+\GuideFigure{menu-users-index.png}{Daftar Users}
+\GuideFigure{menu-users-create.png}{Form tambah user}
+\GuideFigure{menu-users-edit.png}{Form edit user}
+
+\subsection{Filament Shield}
+
+\subsubsection*{Roles}
+\textbf{Tujuan.} Mengatur kumpulan permission atau hak akses pada panel aplikasi.
+
+\textbf{Letak.} Sidebar \textrightarrow{} \textbf{Filament Shield} \textrightarrow{} \textbf{Roles}.
+
+\textbf{Elemen yang terlihat pada halaman create dan edit role.}
+\FieldTableStart
+\FieldRow{Name}{Nama role.}
+\FieldRow{Guard Name}{Nama guard yang dipakai role. Pada pengujian lokal terlihat bernilai \texttt{web}.}
+\FieldRow{Select All}{Tombol sakelar untuk memilih semua permission sekaligus.}
+\FieldRow{Tabs Resources / Pages / Widgets}{Tab pengelompokan permission berdasarkan jenis targetnya.}
+\FieldRow{Checkbox permission}{Daftar centang permission per resource atau page, misalnya View Any, View, Create, Update, Delete, dan seterusnya.}
+\FieldRow{Deselect all}{Tombol untuk mengosongkan centang pada satu kelompok permission.}
+\FieldTableEnd
+
+\textbf{Catatan verifikasi.}
+\begin{itemize}
+    \item Halaman index, create, dan edit role berhasil dibuka.
+    \item Isi form edit role berhasil diamati, termasuk tab Resources, Pages, dan Widgets.
+    \item Penyimpanan perubahan role \textbf{tidak dijalankan} pada pengujian ini untuk menghindari perubahan hak akses aktif pada lingkungan lokal.
+\end{itemize}
+
+\GuideFigure{menu-roles-index.png}{Daftar Roles}
+\GuideFigure{menu-roles-create.png}{Halaman create role}
+\GuideFigure{menu-roles-edit.png}{Halaman edit role}
+
+\subsection{Dokumentasi}
+
+\subsubsection*{Dokumentasi}
+\textbf{Tujuan.} Menampilkan informasi operasional internal dalam format yang mudah dibaca.
+
+\textbf{Letak.} Sidebar \textrightarrow{} \textbf{Dokumentasi} \textrightarrow{} \textbf{Dokumentasi}.
+
+\textbf{Karakteristik halaman.}
+\begin{itemize}
+    \item Halaman ini menampilkan item dokumentasi yang statusnya \texttt{visible}.
+    \item Urutan tampil mengikuti nilai urutan dan label.
+    \item Untuk field bertipe rahasia, admin dapat memiliki hak untuk melihat nilainya, sedangkan user lain hanya melihat bentuk yang disamarkan.
+\end{itemize}
+
+\textbf{Kapan dipakai.} Halaman ini cocok untuk menyimpan informasi seperti jam operasional, nomor kontak, akun tertentu, atau catatan operasional penting.
+
+\GuideFigure{menu-dokumentasi-page.png}{Halaman Dokumentasi saat belum banyak item tampil}
+\GuideFigure{menu-dokumentasi-page-populated.png}{Contoh halaman Dokumentasi setelah item dummy ditambahkan}
+
+\subsubsection*{Item Dokumentasi}
+\textbf{Tujuan.} Mengelola isi yang akan ditampilkan pada halaman Dokumentasi.
+
+\textbf{Letak.} Sidebar \textrightarrow{} \textbf{Dokumentasi} \textrightarrow{} \textbf{Item Dokumentasi}.
+
+\FieldTableStart
+\FieldRow{Label}{Nama tampilan item dokumentasi.}
+\FieldRow{Key}{Identifier internal unik. Harus unik dan mengikuti format huruf kecil, angka, dan tanda hubung.}
+\FieldRow{Tipe Data}{Pilihan tipe data seperti Text, Multiline, Date, Phone, Number, URL, Email, atau Secret.}
+\FieldRow{Value}{Nilai utama. Input yang tampil menyesuaikan tipe data yang dipilih.}
+\FieldRow{Deskripsi}{Keterangan tambahan item dokumentasi.}
+\FieldRow{Urutan}{Angka urutan tampilan.}
+\FieldRow{Tampilkan di halaman Dokumentasi}{Menentukan apakah item tampil di halaman Dokumentasi.}
+\FieldTableEnd
+
+\textbf{Catatan penting.}
+\begin{itemize}
+    \item Nilai untuk tipe \texttt{Secret} disimpan terenkripsi.
+    \item Kolom \textbf{Key} wajib unik.
+    \item Saat label diisi lebih dulu, sistem membantu mengisi key secara otomatis, tetapi pengguna tetap perlu memeriksa hasilnya.
+    \item Aksi bulk delete berhasil diverifikasi pada pengujian lokal.
+\end{itemize}
+
+\textbf{Langkah penggunaan.}
+\begin{enumerate}
+    \item Buka menu \textbf{Item Dokumentasi}.
+    \item Klik \textbf{Create}.
+    \item Isi label.
+    \item Periksa key yang terbentuk, lalu sesuaikan bila perlu.
+    \item Pilih tipe data.
+    \item Isi value sesuai tipe data yang dipilih.
+    \item Isi deskripsi bila perlu.
+    \item Tentukan urutan tampil.
+    \item Pastikan toggle tampil aktif bila item ingin muncul di halaman Dokumentasi.
+    \item Klik \textbf{Create}.
+\end{enumerate}
+
+\textbf{Contoh penggunaan.} Pada pengujian lokal dibuat item \texttt{UG Jam Operasional} dan \texttt{UG Nomor WhatsApp}. Kedua item berhasil tampil pada halaman Dokumentasi, lalu berhasil dipilih dan dihapus kembali menggunakan bulk delete.
+
+\GuideFigure{menu-documentation-items-index.png}{Daftar Item Dokumentasi}
+\GuideFigure{menu-documentation-items-create.png}{Form tambah item dokumentasi}
+\GuideFigure{menu-documentation-items-created.png}{Contoh item dokumentasi yang berhasil disimpan}
+\GuideFigure{menu-documentation-items-bulk-selected.png}{Contoh dua item dokumentasi yang dipilih untuk bulk action}
+\GuideFigure{menu-documentation-items-bulk-delete-modal.png}{Modal konfirmasi bulk delete item dokumentasi}
+\GuideFigure{menu-documentation-items-bulk-deleted.png}{Daftar item dokumentasi setelah bulk delete dijalankan}
+
+\section{Skenario Penggunaan Umum}
+\subsection{Skenario 1: Transaksi Penjualan dari POS Sampai Cetak Struk}
+\begin{enumerate}
+    \item Login ke aplikasi.
+    \item Buka menu \textbf{POS Kasir}.
+    \item Pilih kasir dan metode pembayaran.
+    \item Isi nama customer bila ingin data transaksi lebih rapi.
+    \item Tambahkan item jasa atau produk.
+    \item Pilih pegawai pelaksana bila item berupa jasa.
+    \item Klik \textbf{Simpan Transaksi}.
+    \item Setelah halaman detail terbuka, klik \textbf{Print 58mm} bila ingin membuka struk thermal.
+\end{enumerate}
+
+\textbf{Hasil yang diharapkan.} Invoice tercatat pada menu \textbf{Penjualan}, total transaksi masuk ke laporan, dan bila produk jasa memakai consumable maka stok consumable berkurang otomatis.
+
+\subsection{Skenario 2: Mencatat Pembelian Barang dan Memeriksa Dampak ke Stok}
+\begin{enumerate}
+    \item Buka menu \textbf{Pembelian}.
+    \item Klik \textbf{Create}.
+    \item Pilih supplier.
+    \item Tambahkan produk stok yang dibeli.
+    \item Isi qty dan harga satuan.
+    \item Klik \textbf{Create}.
+    \item Buka menu \textbf{Log Pergerakan Stok}.
+    \item Periksa apakah muncul baris stok masuk dari pembelian tersebut.
+\end{enumerate}
+
+\textbf{Hasil yang diharapkan.} Jumlah stok bertambah, log pergerakan stok mencatat sumber \texttt{Pembelian}, dan nilai pembelian tercatat sebagai referensi transaksi.
+
+\subsection{Skenario 3: Mencatat Kasbon, Mencatat Pembayaran, Lalu Membuat Slip Gaji}
+\begin{enumerate}
+    \item Buka \textbf{Kasbon Pegawai} dan buat data kasbon baru.
+    \item Buka \textbf{Pembayaran Kasbon} bila pegawai mulai mencicil kasbon.
+    \item Buka \textbf{Periode Payroll} dan buat periode yang sesuai.
+    \item Jalankan aksi \textbf{Generate Payslips}.
+    \item Buka \textbf{Slip Gaji} untuk melihat hasil generate.
+    \item Klik \textbf{Mark Paid} bila pembayaran slip gaji sudah dilakukan.
+\end{enumerate}
+
+\textbf{Hasil yang diharapkan.} Slip gaji muncul untuk periode yang dipilih, informasi pinjaman dan cicilan tercermin pada tabel slip gaji, dan slip dapat ditandai sebagai dibayar.
+
+\subsection{Skenario 4: Mengisi Absensi Harian dan Memeriksa Daftar Absensi}
+\begin{enumerate}
+    \item Buka \textbf{Absensi Harian}.
+    \item Pilih tanggal.
+    \item Gunakan tombol \textbf{Set All Hadir} atau isi status per pegawai.
+    \item Klik \textbf{Simpan}.
+    \item Buka \textbf{Absensi Pegawai}.
+    \item Periksa apakah semua baris absensi untuk tanggal tersebut sudah muncul.
+\end{enumerate}
+
+\textbf{Hasil yang diharapkan.} Data absensi tersimpan dan dapat ditinjau atau diperbaiki kembali melalui menu \textbf{Absensi Pegawai}.
+
+\section{Troubleshooting / Masalah yang Sering Terjadi}
+\subsection{Masalah Umum dan Cara Menangani}
+\FieldTableStart
+\FieldRow{Tidak bisa login}{Periksa kembali email dan password. Pastikan field login tidak kosong.}
+\FieldRow{Menu tertentu tidak terlihat}{Akun kemungkinan tidak mempunyai role atau permission yang sesuai. Hubungi admin panel.}
+\FieldRow{Data master tidak bisa dihapus}{Kemungkinan data sudah dipakai transaksi. Solusi yang lebih aman adalah menonaktifkan data tersebut.}
+\FieldRow{Produk tidak muncul di form Pembelian}{Produk harus aktif, track stok harus aktif, dan tipe produk harus retail atau consumable.}
+\FieldRow{Pembayaran kasbon ditolak}{Periksa apakah nominal melebihi sisa kasbon atau bernilai nol.}
+\FieldRow{Periode payroll tidak bisa disimpan}{Periksa aturan tanggal. Payroll harian harus memakai tanggal yang sama, payroll bulanan harus mengikuti cutoff 26-25.}
+\FieldRow{Item dokumentasi tidak tampil di halaman Dokumentasi}{Periksa toggle \texttt{Tampilkan di halaman Dokumentasi} dan urutan item.}
+\FieldRow{Slip gaji belum ada}{Pastikan periode payroll sudah dibuat dan aksi \texttt{Generate Payslips} sudah dijalankan.}
+\FieldTableEnd
+
+\subsection{Catatan Verifikasi Terbatas}
+Bagian berikut berhasil teridentifikasi pada UI, tetapi tidak seluruh perilakunya diverifikasi penuh:
+\begin{itemize}
+    \item \textbf{Users}: create user memunculkan error server setelah submit walaupun record user tersimpan. Karena itu alur create user belum dianggap stabil.
+    \item \textbf{Roles}: halaman index, create, dan edit berhasil dibuka, tetapi penyimpanan perubahan role tidak dijalankan agar tidak mengubah permission aktif pada lingkungan lokal.
+    \item \textbf{Slip Gaji PDF}: tombol PDF terdeteksi dan memicu file PDF, tetapi tampilan pembaca PDF di browser tidak diverifikasi penuh.
+    \item \textbf{ESC/POS RAW}: aksi tersedia pada menu Penjualan dan halaman detail penjualan, tetapi isi raw output tidak diperiksa penuh.
+\end{itemize}
+
+\subsection{Tips Agar Penggunaan Lebih Aman}
+\begin{itemize}
+    \item Gunakan data dummy dengan awalan yang mudah dikenali, misalnya \texttt{UG}, saat sedang latihan atau dokumentasi.
+    \item Jangan langsung menghapus data master yang sudah pernah dipakai transaksi.
+    \item Biasakan memeriksa tanggal pada absensi, transaksi, dan payroll sebelum menekan tombol simpan.
+    \item Untuk payroll dan kasbon, lakukan pengecekan dua kali pada nominal agar tidak salah hitung.
+\end{itemize}
+
+\section{Penutup}
+Panduan ini disusun untuk membantu pengguna memahami aplikasi kasir WAN's Barber secara menyeluruh, mulai dari login, transaksi kasir, stok, keuangan, payroll, sampai dokumentasi internal. Isi dokumen ini mengikuti apa yang benar-benar terlihat dan dapat dijalankan pada aplikasi lokal di \url{http://localhost:8000/kasir}.
+
+Selama proses penyusunan, sebagian besar menu berhasil didokumentasikan melalui observasi langsung, screenshot, dan uji alur nyata dengan data dummy. Jika nantinya aplikasi mengalami perubahan tampilan, perubahan nama menu, atau perbaikan bug, maka dokumen ini sebaiknya diperbarui agar tetap sesuai dengan kondisi sistem terbaru.
+
+\end{document}
