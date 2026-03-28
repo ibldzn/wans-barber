@@ -63,6 +63,7 @@ class KasirPanelProvider extends PanelProvider
             ])
             ->authMiddleware([
                 Authenticate::class,
-            ]);
+            ])
+            ->globalSearch(false);
     }
 }
