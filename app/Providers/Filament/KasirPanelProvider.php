@@ -3,6 +3,7 @@
 namespace App\Providers\Filament;
 
 use App\Filament\Widgets\CashflowTrendWidget;
+use App\Filament\Widgets\FullWidthAccountWidget;
 use App\Filament\Widgets\LowStockWidget;
 use App\Filament\Widgets\OutstandingCashAdvanceWidget;
 use App\Filament\Widgets\TodayOperationalStatsWidget;
@@ -15,7 +16,6 @@ use Filament\Pages\Dashboard;
 use Filament\Panel;
 use Filament\PanelProvider;
 use Filament\Support\Colors\Color;
-use Filament\Widgets\AccountWidget;
 use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
 use Illuminate\Cookie\Middleware\EncryptCookies;
 use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
@@ -44,7 +44,7 @@ class KasirPanelProvider extends PanelProvider
             ])
             ->discoverWidgets(in: app_path('Filament/Widgets'), for: 'App\Filament\Widgets')
             ->widgets([
-                AccountWidget::class,
+                FullWidthAccountWidget::class,
                 TodayOperationalStatsWidget::class,
                 CashflowTrendWidget::class,
                 LowStockWidget::class,
