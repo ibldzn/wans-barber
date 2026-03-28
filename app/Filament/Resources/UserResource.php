@@ -15,6 +15,7 @@ use Filament\Schemas\Schema;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
+use Spatie\Permission\Guard;
 use Spatie\Permission\Models\Role;
 
 class UserResource extends Resource
@@ -161,8 +162,9 @@ class UserResource extends Resource
     public static function syncUserAccess(User $user, ?int $previousEmployeeId = null): void
     {
         $roleName = array_key_exists($user->role, static::getPanelRoleOptions()) ? $user->role : 'admin';
+        $guardName = Guard::getDefaultName($user);
 
-        $role = Role::findOrCreate($roleName, $user->getDefaultGuardName());
+        $role = Role::findOrCreate($roleName, $guardName);
         $user->syncRoles([$role]);
         $user->forceFill(['role' => $roleName])->saveQuietly();
 
