@@ -40,7 +40,7 @@ class DocumentationPage extends Page
                 ->orderBy('sort_order')
                 ->orderBy('label')
                 ->get(),
-            'canRevealSecrets' => (bool) auth()->user()?->isAdmin(),
+            'canRevealSecrets' => (bool) auth()->user()?->isAdmin() || (bool) auth()->user()?->isKasir(),
         ];
     }
 }

@@ -162,26 +162,6 @@ class DocumentationItemResource extends Resource
         ];
     }
 
-    public static function canViewAny(): bool
-    {
-        return static::canAccessByRole();
-    }
-
-    public static function canCreate(): bool
-    {
-        return static::canAccessByRole();
-    }
-
-    public static function canEdit($record): bool
-    {
-        return static::canAccessByRole();
-    }
-
-    public static function canDelete($record): bool
-    {
-        return static::canAccessByRole();
-    }
-
     /**
      * @param  array<string, mixed>  $data
      * @return array<string, mixed>
@@ -239,12 +219,5 @@ class DocumentationItemResource extends Resource
         $data['value_secret'] = $record->field_type === DocumentationItem::FIELD_TYPE_SECRET ? $plainValue : null;
 
         return $data;
-    }
-
-    protected static function canAccessByRole(): bool
-    {
-        $user = auth()->user();
-
-        return (bool) ($user && $user->isAdmin());
     }
 }

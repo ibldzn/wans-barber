@@ -109,31 +109,4 @@ class ManualFinanceEntryResource extends Resource
             'edit' => Pages\EditManualFinanceEntry::route('/{record}/edit'),
         ];
     }
-
-    public static function canViewAny(): bool
-    {
-        return static::canAccessByRole();
-    }
-
-    public static function canCreate(): bool
-    {
-        return static::canAccessByRole();
-    }
-
-    public static function canEdit($record): bool
-    {
-        return static::canAccessByRole();
-    }
-
-    public static function canDelete($record): bool
-    {
-        return static::canAccessByRole();
-    }
-
-    protected static function canAccessByRole(): bool
-    {
-        $user = auth()->user();
-
-        return (bool) ($user && $user->isAdmin());
-    }
 }

@@ -11,6 +11,14 @@ use Spatie\Permission\PermissionRegistrar;
 
 class ShieldSeeder extends Seeder
 {
+    /**
+     * @var list<string>
+     */
+    private const KASIR_EXCLUDED_ENTITIES = [
+        'Role',
+        'User',
+    ];
+
     public function run(): void
     {
         $panel = Filament::getPanel('kasir');
@@ -26,6 +34,7 @@ class ShieldSeeder extends Seeder
         }
 
         Utils::giveSuperAdminPermission($permissions);
+        $this->syncKasirPermissions($permissions);
 
         app(PermissionRegistrar::class)->forgetCachedPermissions();
 
@@ -106,5 +115,34 @@ class ShieldSeeder extends Seeder
             ->filter(fn ($permission) => is_string($permission) && $permission !== '')
             ->values()
             ->all();
+    }
+
+    /**
+     * @param  list<string>  $permissions
+     */
+    private function syncKasirPermissions(array $permissions): void
+    {
+        $kasirRole = Utils::createRole('kasir');
+
+        $kasirRole->syncPermissions($this->buildKasirPermissions($permissions));
+    }
+
+    /**
+     * @param  list<string>  $permissions
+     * @return list<string>
+     */
+    private function buildKasirPermissions(array $permissions): array
+    {
+        return collect($permissions)
+            ->filter(fn (string $permission): bool => $this->shouldGrantKasirPermission($permission))
+            ->values()
+            ->all();
+    }
+
+    private function shouldGrantKasirPermission(string $permission): bool
+    {
+        $entity = (string) str($permission)->afterLast(':');
+
+        return ! in_array($entity, self::KASIR_EXCLUDED_ENTITIES, true);
     }
 }
